@@ -47,29 +47,39 @@ bool buttonPressed()
   return false;
 }
 
-// -------------------- UI State --------------------
-int menuIndex = 0;
-const char* items[] = {"Status", "Settings", "Info", "Beep", "test"};
-constexpr int ITEM_COUNT = sizeof(items)/sizeof(items[0]);
+// -------------------- Dynamic Menu System --------------------
+struct MenuItem {
+  int id;
+  String name;
+};
 
+// Example dynamic list (replace with your own data source)
+MenuItem menuItems[] = {
+  {1, "Artist One"},
+  {2, "Artist Two"},
+  {3, "Artist Three"},
+  {4, "Artist Four"},
+  {5, "Artist Five"}
+};
+constexpr int MENU_COUNT = sizeof(menuItems)/sizeof(menuItems[0]);
+
+int menuIndex = 0;
 bool dotVisible = false;
 
-void drawUI()
+void drawMenu()
 {
   u8g2.clearBuffer();
-
   u8g2.setFont(u8g2_font_6x10_tf);
 
-  // Menu
-  for (int i = 0; i < ITEM_COUNT; ++i) {
+  for (int i = 0; i < MENU_COUNT; ++i) {
     int y = 14 + i * 12;
     if (i == menuIndex) {
       u8g2.drawBox(0, y - 9, 128, 11);
       u8g2.setDrawColor(0);
-      u8g2.drawStr(4, y, items[i]);
+      u8g2.drawStr(4, y, menuItems[i].name.c_str());
       u8g2.setDrawColor(1);
     } else {
-      u8g2.drawStr(4, y, items[i]);
+      u8g2.drawStr(4, y, menuItems[i].name.c_str());
     }
   }
 
@@ -79,6 +89,19 @@ void drawUI()
   }
 
   u8g2.sendBuffer();
+}
+
+void handleMenuSelect(int id) {
+  // Handle selection by id
+  // Example: toggle dot for id==5, otherwise print to serial
+  if (id == 5) {
+    dotVisible = !dotVisible;
+  } else {
+    Serial.print("Selected item id: ");
+    Serial.print(id);
+    Serial.print(", name: ");
+    Serial.println(menuItems[menuIndex].name);
+  }
 }
 
 void setup()
@@ -103,33 +126,38 @@ void setup()
   // ...existing code...
 }
 
-void loop()
+
+void handleEncoder()
 {
-  // Handle encoder movement (coalesce ticks → steps)
   static int32_t lastTicks = 0;
   int32_t ticks = encoder.getCount();
   int32_t delta = ticks - lastTicks;
   lastTicks = ticks;
 
-  // Many encoders yield 4 ticks per detent; adjust as needed
+  // Many encoders yield 2 ticks per detent; adjust as needed
   static int32_t acc = 0;
   acc += delta;
   while (acc >= 2) { acc -= 2; menuIndex++; }
   while (acc <= -2){ acc += 2; menuIndex--; }
-  if (menuIndex < 0) menuIndex = ITEM_COUNT - 1;
-  if (menuIndex >= ITEM_COUNT) menuIndex = 0;
+  if (menuIndex < 0) menuIndex = MENU_COUNT - 1;
+  if (menuIndex >= MENU_COUNT) menuIndex = 0;
+}
 
-  // Button: toggle dot on press
+void loop()
+{
+  handleEncoder();
+
+  // Button: select menu item
   static bool lastDotState = false;
   if (buttonPressed()) {
     if (!lastDotState) {
-      dotVisible = !dotVisible;
+      handleMenuSelect(menuItems[menuIndex].id);
       lastDotState = true;
     }
   } else {
     lastDotState = false;
   }
 
-  drawUI();
+  drawMenu();
   delay(10);
 }
