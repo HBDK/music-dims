@@ -41,14 +41,19 @@ bool debouncedButtonPressed(uint8_t pin) {
   return false;
 }
 
+#include <Adafruit_NeoPixel.h>
+
+constexpr uint8_t PIN_LCD_RGB = 21; // Change to your actual NeoPixel data pin
+constexpr uint8_t NUM_PIXELS = 3;   // Usually 1 for backlight
+
+Adafruit_NeoPixel rgbBacklight(NUM_PIXELS, PIN_LCD_RGB, NEO_GRB + NEO_KHZ800);
+
 // -------------------- WiFi & API Integration --------------------
 // API service and MenuItem struct
 #include "api_service.h"
 
 // Secrets config
 #include "secrets.h"
-
-String apiArtistsUrl = String(apiHost) + "/artists";
 
 // Dynamic menu storage
 MenuItem menuItems[400]; // used for both artists and albums
@@ -130,6 +135,13 @@ void handleMenuSelect(int id) {
 void setup()
 {
   Serial.begin(115200);
+
+  rgbBacklight.begin();
+  rgbBacklight.setBrightness(100); // Optional: 0-255
+  rgbBacklight.setPixelColor(0, rgbBacklight.Color(32, 0, 32)); // Purple (R,G,B)
+  rgbBacklight.setPixelColor(1, rgbBacklight.Color(32, 0, 32)); // Purple (R,G,B)
+  rgbBacklight.setPixelColor(2, rgbBacklight.Color(128, 0, 128)); // Purple (R,G,B)
+  rgbBacklight.show();
 
   // Pins
   pinMode(PIN_ENC_SW, INPUT_PULLUP);
