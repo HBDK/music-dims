@@ -10,7 +10,7 @@ struct MenuItem {
 
 class ApiService {
 public:
-  static bool fetchArtists(MenuItem* items, int& count, const String& url) {
+  static bool fetchMenuItems(MenuItem* items, int& count, const String& url) {
     if (WiFi.status() != WL_CONNECTED) return false;
     HTTPClient http;
     http.begin(url.c_str());
@@ -29,6 +29,7 @@ public:
             count++;
           }
         }
+        http.end();
         return true;
       }
     }
@@ -36,29 +37,11 @@ public:
     return false;
   }
 
+  static bool fetchArtists(MenuItem* items, int& count, const String& url) {
+    return fetchMenuItems(items, count, url);
+  }
+
   static bool fetchAlbums(MenuItem* items, int& count, const String& url) {
-    if (WiFi.status() != WL_CONNECTED) return false;
-    HTTPClient http;
-    http.begin(url.c_str());
-    int httpCode = http.GET();
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      StaticJsonDocument<16384> doc;
-      DeserializationError err = deserializeJson(doc, payload);
-      if (!err) {
-        JsonArray arr = doc.as<JsonArray>();
-        count = 0;
-        for (JsonObject obj : arr) {
-          if (count < 400) {
-            items[count].id = obj["id"].as<int>();
-            items[count].name = obj["name"].as<String>();
-            count++;
-          }
-        }
-        return true;
-      }
-    }
-    http.end();
-    return false;
+    return fetchMenuItems(items, count, url);
   }
 };

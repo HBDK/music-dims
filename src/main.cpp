@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
-// ...existing code...
 
 // -------------------- Pin Map (change if you rewired) --------------------
 constexpr uint8_t PIN_LCD_SCK  = 18; // ESP32 VSPI SCK
@@ -12,15 +11,12 @@ constexpr uint8_t PIN_LCD_RST  = 2;
 constexpr uint8_t PIN_ENC_A    = 32;
 constexpr uint8_t PIN_ENC_B    = 33;
 constexpr uint8_t PIN_ENC_SW   = 25;
-
-// ...existing code...
-// ...existing code...
-
+constexpr uint8_t PIN_BACK_BTN = 27;
 // -------------------- Display: ST7567 (BTT Mini12864 v2.0) --------------------
 // Try this first (JLX glass is common). If nothing shows, try the SH1107-style
 // or a different ST7567 constructor from U8g2’s list.
 U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(
-  U8G2_R2,          // rotation
+  U8G2_R2,
   /* cs=*/ PIN_LCD_CS,
   /* dc=*/ PIN_LCD_DC,
   /* reset=*/ PIN_LCD_RST
@@ -33,17 +29,15 @@ U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(
 #include <ESP32Encoder.h>
 ESP32Encoder encoder;
 
-bool buttonPressed()
-{
-  static uint32_t tLast = 0;
-  static bool last = HIGH;
-  bool now = digitalRead(PIN_ENC_SW);
-  if (now != last) {
-    last = now;
-    tLast = millis();
+bool debouncedButtonPressed(uint8_t pin) {
+  static uint32_t tLast[32] = {0}; // Support up to 32 pins
+  static bool last[32] = {HIGH};
+  bool now = digitalRead(pin);
+  if (now != last[pin]) {
+    last[pin] = now;
+    tLast[pin] = millis();
   }
-  // crude debounce
-  if (millis() - tLast > 20 && now == LOW) return true;
+  if (millis() - tLast[pin] > 20 && now == LOW) return true;
   return false;
 }
 
@@ -60,7 +54,6 @@ String apiArtistsUrl = String(apiHost) + "/artists";
 MenuItem menuItems[400]; // used for both artists and albums
 int menuCount = 0;
 int menuIndex = 0;
-bool dotVisible = false;
 bool showingAlbums = false;
 
 
@@ -91,9 +84,7 @@ void drawMenu()
         u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
       }
     }
-    if (dotVisible && !showingAlbums) {
-      u8g2.drawDisc(124, 6, 3, U8G2_DRAW_ALL);
-    }
+    // Dot drawing logic removed
   }
   u8g2.sendBuffer();
 }
@@ -111,10 +102,7 @@ void handleMenuSelect(int id) {
     Serial.println(menuItems[menuIndex].name);
     if (!ok) Serial.println("Failed to fetch albums!");
   } else {
-    // Return to artist list
-    ApiService::fetchArtists(menuItems, menuCount, apiArtistsUrl);
-    menuIndex = 0;
-    showingAlbums = false;
+    // Print album info only
     Serial.print("Selected album id: ");
     Serial.print(menuItems[menuIndex].id);
     Serial.print(", name: ");
@@ -128,6 +116,7 @@ void setup()
 
   // Pins
   pinMode(PIN_ENC_SW, INPUT_PULLUP);
+  pinMode(PIN_BACK_BTN, INPUT_PULLUP);
 
   // Encoder (ESP32Encoder)
   ESP32Encoder::useInternalWeakPullResistors = puType::none;
@@ -155,7 +144,12 @@ void setup()
   ApiService::fetchArtists(menuItems, menuCount, apiArtistsUrl);
 }
 
-
+void handleBack() {
+  ApiService::fetchArtists(menuItems, menuCount, apiArtistsUrl);
+  menuIndex = 0;
+  showingAlbums = false;
+  Serial.println("Back to artist menu");
+}
 void handleEncoder()
 {
   static int32_t lastTicks = 0;
@@ -177,13 +171,24 @@ void loop()
 
   // Button: select menu item
   static bool lastDotState = false;
-  if (buttonPressed()) {
+  static bool lastBackState = false;
+  if (debouncedButtonPressed(PIN_ENC_SW)) {
     if (!lastDotState) {
       handleMenuSelect(menuItems[menuIndex].id);
       lastDotState = true;
     }
   } else {
     lastDotState = false;
+  }
+
+  // Back button: go back to artist menu if in album menu
+  if (debouncedButtonPressed(PIN_BACK_BTN)) {
+    if (!lastBackState && showingAlbums) {
+      handleBack();
+      lastBackState = true;
+    }
+  } else {
+    lastBackState = false;
   }
 
   drawMenu();
