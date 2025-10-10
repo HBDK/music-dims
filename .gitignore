@@ -6,3 +6,7 @@
 .gcc-flags.json
 .pio
 .vscode
+node_modules
+package-lock.json
+package.json
+src/secrets.h

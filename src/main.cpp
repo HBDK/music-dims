@@ -47,39 +47,52 @@ bool buttonPressed()
   return false;
 }
 
-// -------------------- Dynamic Menu System --------------------
+// -------------------- WiFi & API Integration --------------------
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
 struct MenuItem {
   int id;
   String name;
 };
 
-// Example dynamic list (replace with your own data source)
-MenuItem menuItems[] = {
-  {1, "Artist One"},
-  {2, "Artist Two"},
-  {3, "Artist Three"},
-  {4, "Artist Four"},
-  {5, "Artist Five"},
-  {6, "Artist Six"},
-  {7, "Artist Seven"},
-  {8, "Artist Eight"},
-  {9, "Artist Nine"},
-  {10, "Artist Ten"},
-  {11, "Artist Eleven"},
-  {12, "Artist Twelve"},
-  {13, "Artist Thirteen"},
-  {14, "Artist Fourteen"},
-  {15, "Artist Fifteen"},
-  {16, "Artist Sixteen"},
-  {17, "Artist Seventeen"},
-  {18, "Artist Eighteen"},
-  {19, "Artist Nineteen"},
-  {20, "Artist Twenty"}
-};
-constexpr int MENU_COUNT = sizeof(menuItems)/sizeof(menuItems[0]);
+// Secrets config
+#include "secrets.h"
 
+String apiArtistsUrl = String(apiHost) + "/artists";
+
+// Dynamic menu storage
+MenuItem menuItems[32]; // max 32 artists for demo
+int MENU_COUNT = 0;
 int menuIndex = 0;
 bool dotVisible = false;
+
+void fetchArtists() {
+  if (WiFi.status() != WL_CONNECTED) return;
+  HTTPClient http;
+  http.begin(apiArtistsUrl.c_str());
+  int httpCode = http.GET();
+  if (httpCode == HTTP_CODE_OK) {
+    String payload = http.getString();
+  StaticJsonDocument<4096> doc;
+    DeserializationError err = deserializeJson(doc, payload);
+    if (!err) {
+      JsonArray arr = doc.as<JsonArray>();
+      MENU_COUNT = 0;
+      for (JsonObject obj : arr) {
+        if (MENU_COUNT < 32) {
+          menuItems[MENU_COUNT].id = obj["id"].as<int>();
+          menuItems[MENU_COUNT].name = obj["name"].as<String>();
+          MENU_COUNT++;
+        }
+      }
+      if (menuIndex >= MENU_COUNT) menuIndex = MENU_COUNT - 1;
+      if (menuIndex < 0) menuIndex = 0;
+    }
+  }
+  http.end();
+}
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
 
@@ -88,28 +101,33 @@ void drawMenu()
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
 
-  // Calculate scroll window
-  int scrollStart = menuIndex - MENU_VISIBLE/2;
-  if (scrollStart < 0) scrollStart = 0;
-  if (scrollStart > MENU_COUNT - MENU_VISIBLE) scrollStart = MENU_COUNT - MENU_VISIBLE;
-  if (scrollStart < 0) scrollStart = 0; // handle case where MENU_COUNT < MENU_VISIBLE
+  if (MENU_COUNT == 0) {
+    u8g2.drawStr(0, 24, "No artists found!");
+    u8g2.drawStr(0, 40, "Check API & WiFi");
+  } else {
+    // Calculate scroll window
+    int scrollStart = menuIndex - MENU_VISIBLE/2;
+    if (scrollStart < 0) scrollStart = 0;
+    if (scrollStart > MENU_COUNT - MENU_VISIBLE) scrollStart = MENU_COUNT - MENU_VISIBLE;
+    if (scrollStart < 0) scrollStart = 0; // handle case where MENU_COUNT < MENU_VISIBLE
 
-  for (int i = 0; i < MENU_VISIBLE && (scrollStart + i) < MENU_COUNT; ++i) {
-    int y = 14 + i * 12;
-    int itemIdx = scrollStart + i;
-    if (itemIdx == menuIndex) {
-      u8g2.drawBox(0, y - 9, 128, 11);
-      u8g2.setDrawColor(0);
-      u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
-      u8g2.setDrawColor(1);
-    } else {
-      u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
+    for (int i = 0; i < MENU_VISIBLE && (scrollStart + i) < MENU_COUNT; ++i) {
+      int y = 14 + i * 12;
+      int itemIdx = scrollStart + i;
+      if (itemIdx == menuIndex) {
+        u8g2.drawBox(0, y - 9, 128, 11);
+        u8g2.setDrawColor(0);
+        u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
+        u8g2.setDrawColor(1);
+      } else {
+        u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
+      }
     }
-  }
 
-  // Draw dot in upper right if visible
-  if (dotVisible) {
-    u8g2.drawDisc(124, 6, 3, U8G2_DRAW_ALL);
+    // Draw dot in upper right if visible
+    if (dotVisible) {
+      u8g2.drawDisc(124, 6, 3, U8G2_DRAW_ALL);
+    }
   }
 
   u8g2.sendBuffer();
@@ -139,15 +157,24 @@ void setup()
   encoder.setCount(0);
 
   // Display
-  // If you see nothing, try U8G2_R2 rotation or a different ST7567 constructor.
   u8g2.begin();
   u8g2.setContrast(180);
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
-  u8g2.drawStr(0, 12, "Booting...");
+  u8g2.drawStr(0, 12, "Connecting WiFi...");
   u8g2.sendBuffer();
 
-  // ...existing code...
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(0, 12, "WiFi connected!");
+  u8g2.sendBuffer();
+  delay(500);
+
+  fetchArtists();
 }
 
 
