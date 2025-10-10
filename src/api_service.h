@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include "secrets.h"
 
 struct MenuItem {
   int id;
@@ -37,11 +38,13 @@ public:
     return false;
   }
 
-  static bool fetchArtists(MenuItem* items, int& count, const String& url) {
+  static bool fetchArtists(MenuItem* items, int& count) {
+    String url = String(apiHost) + "/artists";
     return fetchMenuItems(items, count, url);
   }
 
-  static bool fetchAlbums(MenuItem* items, int& count, const String& url) {
+  static bool fetchAlbums(MenuItem* items, int& count, int artistId) {
+    String url = String(apiHost) + "/artists/" + String(artistId) + "/albums";
     return fetchMenuItems(items, count, url);
   }
 };

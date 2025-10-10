@@ -56,6 +56,11 @@ int menuCount = 0;
 int menuIndex = 0;
 bool showingAlbums = false;
 
+// Album detail page state
+bool showingAlbumDetail = false;
+MenuItem currentAlbum;
+MenuItem currentArtist;
+
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
 
@@ -63,6 +68,14 @@ void drawMenu()
 {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
+
+  if (showingAlbumDetail) {
+    // Album detail page
+    u8g2.drawStr(0, 16, currentArtist.name.c_str());
+    u8g2.drawStr(0, 32, currentAlbum.name.c_str());
+    u8g2.sendBuffer();
+    return;
+  }
 
   if (menuCount == 0) {
     u8g2.drawStr(0, 24, showingAlbums ? "No albums found!" : "No artists found!");
@@ -84,7 +97,6 @@ void drawMenu()
         u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
       }
     }
-    // Dot drawing logic removed
   }
   u8g2.sendBuffer();
 }
@@ -92,21 +104,26 @@ void drawMenu()
 void handleMenuSelect(int id) {
   if (!showingAlbums) {
     // Fetch albums and overwrite menuItems
-    String albumsUrl = String(apiHost) + "/artists/" + String(id) + "/albums";
-    bool ok = ApiService::fetchAlbums(menuItems, menuCount, albumsUrl);
+  bool ok = ApiService::fetchAlbums(menuItems, menuCount, id);
     menuIndex = 0;
     showingAlbums = true;
+    // Save current artist info for detail page
+    currentArtist.id = id;
+    currentArtist.name = menuItems[menuIndex].name;
     Serial.print("Selected artist id: ");
     Serial.print(id);
     Serial.print(", name: ");
     Serial.println(menuItems[menuIndex].name);
     if (!ok) Serial.println("Failed to fetch albums!");
   } else {
-    // Print album info only
+    // Show album detail page
+    currentAlbum.id = menuItems[menuIndex].id;
+    currentAlbum.name = menuItems[menuIndex].name;
+    showingAlbumDetail = true;
     Serial.print("Selected album id: ");
-    Serial.print(menuItems[menuIndex].id);
+    Serial.print(currentAlbum.id);
     Serial.print(", name: ");
-    Serial.println(menuItems[menuIndex].name);
+    Serial.println(currentAlbum.name);
   }
 }
 
@@ -141,15 +158,27 @@ void setup()
   u8g2.sendBuffer();
   delay(500);
 
-  ApiService::fetchArtists(menuItems, menuCount, apiArtistsUrl);
+  ApiService::fetchArtists(menuItems, menuCount);
 }
 
 void handleBack() {
-  ApiService::fetchArtists(menuItems, menuCount, apiArtistsUrl);
+  if (showingAlbumDetail) {
+    // Go back to album list for current artist
+  bool ok = ApiService::fetchAlbums(menuItems, menuCount, currentArtist.id);
+    menuIndex = 0;
+    showingAlbumDetail = false;
+    showingAlbums = true;
+    Serial.println("Back to album list");
+    if (!ok) Serial.println("Failed to fetch albums!");
+    return;
+  }
+  // Default: go back to artist menu
+  ApiService::fetchArtists(menuItems, menuCount);
   menuIndex = 0;
   showingAlbums = false;
   Serial.println("Back to artist menu");
 }
+
 void handleEncoder()
 {
   static int32_t lastTicks = 0;
@@ -174,16 +203,18 @@ void loop()
   static bool lastBackState = false;
   if (debouncedButtonPressed(PIN_ENC_SW)) {
     if (!lastDotState) {
-      handleMenuSelect(menuItems[menuIndex].id);
+      if (!showingAlbumDetail) {
+        handleMenuSelect(menuItems[menuIndex].id);
+      }
       lastDotState = true;
     }
   } else {
     lastDotState = false;
   }
 
-  // Back button: go back to artist menu if in album menu
+  // Back button: go back to previous menu
   if (debouncedButtonPressed(PIN_BACK_BTN)) {
-    if (!lastBackState && showingAlbums) {
+    if (!lastBackState && (showingAlbums || showingAlbumDetail)) {
       handleBack();
       lastBackState = true;
     }
