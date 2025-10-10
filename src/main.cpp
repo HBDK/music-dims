@@ -57,10 +57,11 @@ bool buttonPressed()
 String apiArtistsUrl = String(apiHost) + "/artists";
 
 // Dynamic menu storage
-MenuItem menuItems[400]; // max 400 artists for demo
-int MENU_COUNT = 0;
+MenuItem menuItems[400]; // used for both artists and albums
+int menuCount = 0;
 int menuIndex = 0;
 bool dotVisible = false;
+bool showingAlbums = false;
 
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
@@ -70,17 +71,15 @@ void drawMenu()
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
 
-  if (MENU_COUNT == 0) {
-    u8g2.drawStr(0, 24, "No artists found!");
-    u8g2.drawStr(0, 40, "Check API & WiFi");
+  if (menuCount == 0) {
+    u8g2.drawStr(0, 24, showingAlbums ? "No albums found!" : "No artists found!");
+    if (!showingAlbums) u8g2.drawStr(0, 40, "Check API & WiFi");
   } else {
-    // Calculate scroll window
     int scrollStart = menuIndex - MENU_VISIBLE/2;
     if (scrollStart < 0) scrollStart = 0;
-    if (scrollStart > MENU_COUNT - MENU_VISIBLE) scrollStart = MENU_COUNT - MENU_VISIBLE;
-    if (scrollStart < 0) scrollStart = 0; // handle case where MENU_COUNT < MENU_VISIBLE
-
-    for (int i = 0; i < MENU_VISIBLE && (scrollStart + i) < MENU_COUNT; ++i) {
+    if (scrollStart > menuCount - MENU_VISIBLE) scrollStart = menuCount - MENU_VISIBLE;
+    if (scrollStart < 0) scrollStart = 0;
+    for (int i = 0; i < MENU_VISIBLE && (scrollStart + i) < menuCount; ++i) {
       int y = 14 + i * 12;
       int itemIdx = scrollStart + i;
       if (itemIdx == menuIndex) {
@@ -92,24 +91,32 @@ void drawMenu()
         u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
       }
     }
-
-    // Draw dot in upper right if visible
-    if (dotVisible) {
+    if (dotVisible && !showingAlbums) {
       u8g2.drawDisc(124, 6, 3, U8G2_DRAW_ALL);
     }
   }
-
   u8g2.sendBuffer();
 }
 
 void handleMenuSelect(int id) {
-  // Handle selection by id
-  // Example: toggle dot for id==5, otherwise print to serial
-  if (id == 5) {
-    dotVisible = !dotVisible;
-  } else {
-    Serial.print("Selected item id: ");
+  if (!showingAlbums) {
+    // Fetch albums and overwrite menuItems
+    String albumsUrl = String(apiHost) + "/artists/" + String(id) + "/albums";
+    bool ok = ApiService::fetchAlbums(menuItems, menuCount, albumsUrl);
+    menuIndex = 0;
+    showingAlbums = true;
+    Serial.print("Selected artist id: ");
     Serial.print(id);
+    Serial.print(", name: ");
+    Serial.println(menuItems[menuIndex].name);
+    if (!ok) Serial.println("Failed to fetch albums!");
+  } else {
+    // Return to artist list
+    ApiService::fetchArtists(menuItems, menuCount, apiArtistsUrl);
+    menuIndex = 0;
+    showingAlbums = false;
+    Serial.print("Selected album id: ");
+    Serial.print(menuItems[menuIndex].id);
     Serial.print(", name: ");
     Serial.println(menuItems[menuIndex].name);
   }
@@ -145,7 +152,7 @@ void setup()
   u8g2.sendBuffer();
   delay(500);
 
-  ApiService::fetchArtists(menuItems, MENU_COUNT, apiArtistsUrl);
+  ApiService::fetchArtists(menuItems, menuCount, apiArtistsUrl);
 }
 
 
@@ -156,13 +163,12 @@ void handleEncoder()
   int32_t delta = ticks - lastTicks;
   lastTicks = ticks;
 
-  // Many encoders yield 2 ticks per detent; adjust as needed
   static int32_t acc = 0;
   acc += delta;
   while (acc >= 2) { acc -= 2; menuIndex++; }
   while (acc <= -2){ acc += 2; menuIndex--; }
-  if (menuIndex < 0) menuIndex = MENU_COUNT - 1;
-  if (menuIndex >= MENU_COUNT) menuIndex = 0;
+  if (menuIndex < 0) menuIndex = menuCount - 1;
+  if (menuIndex >= menuCount) menuIndex = 0;
 }
 
 void loop()
