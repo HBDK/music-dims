@@ -13,7 +13,7 @@ constexpr uint8_t PIN_ENC_A    = 32;
 constexpr uint8_t PIN_ENC_B    = 33;
 constexpr uint8_t PIN_ENC_SW   = 25;
 
-constexpr uint8_t PIN_BUZZER   = 26; // optional
+// ...existing code...
 // ...existing code...
 
 // -------------------- Display: ST7567 (BTT Mini12864 v2.0) --------------------
@@ -52,6 +52,8 @@ int menuIndex = 0;
 const char* items[] = {"Status", "Settings", "Info", "Beep", "test"};
 constexpr int ITEM_COUNT = sizeof(items)/sizeof(items[0]);
 
+bool dotVisible = false;
+
 void drawUI()
 {
   u8g2.clearBuffer();
@@ -71,6 +73,11 @@ void drawUI()
     }
   }
 
+  // Draw dot in upper right if visible
+  if (dotVisible) {
+    u8g2.drawDisc(124, 6, 3, U8G2_DRAW_ALL);
+  }
+
   u8g2.sendBuffer();
 }
 
@@ -78,8 +85,6 @@ void setup()
 {
   // Pins
   pinMode(PIN_ENC_SW, INPUT_PULLUP);
-  pinMode(PIN_BUZZER, OUTPUT);
-  digitalWrite(PIN_BUZZER, LOW);
 
   // Encoder (ESP32Encoder)
   ESP32Encoder::useInternalWeakPullResistors = puType::none;
@@ -114,14 +119,15 @@ void loop()
   if (menuIndex < 0) menuIndex = ITEM_COUNT - 1;
   if (menuIndex >= ITEM_COUNT) menuIndex = 0;
 
-  // Button
+  // Button: toggle dot on press
+  static bool lastDotState = false;
   if (buttonPressed()) {
-    if (menuIndex == 4) {
-      // Beep
-      digitalWrite(PIN_BUZZER, HIGH);
-      delay(60);
-      digitalWrite(PIN_BUZZER, LOW);
+    if (!lastDotState) {
+      dotVisible = !dotVisible;
+      lastDotState = true;
     }
+  } else {
+    lastDotState = false;
   }
 
   drawUI();
