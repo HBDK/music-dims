@@ -48,14 +48,8 @@ bool buttonPressed()
 }
 
 // -------------------- WiFi & API Integration --------------------
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
-
-struct MenuItem {
-  int id;
-  String name;
-};
+// API service and MenuItem struct
+#include "api_service.h"
 
 // Secrets config
 #include "secrets.h"
@@ -63,36 +57,11 @@ struct MenuItem {
 String apiArtistsUrl = String(apiHost) + "/artists";
 
 // Dynamic menu storage
-MenuItem menuItems[32]; // max 32 artists for demo
+MenuItem menuItems[400]; // max 400 artists for demo
 int MENU_COUNT = 0;
 int menuIndex = 0;
 bool dotVisible = false;
 
-void fetchArtists() {
-  if (WiFi.status() != WL_CONNECTED) return;
-  HTTPClient http;
-  http.begin(apiArtistsUrl.c_str());
-  int httpCode = http.GET();
-  if (httpCode == HTTP_CODE_OK) {
-    String payload = http.getString();
-  StaticJsonDocument<4096> doc;
-    DeserializationError err = deserializeJson(doc, payload);
-    if (!err) {
-      JsonArray arr = doc.as<JsonArray>();
-      MENU_COUNT = 0;
-      for (JsonObject obj : arr) {
-        if (MENU_COUNT < 32) {
-          menuItems[MENU_COUNT].id = obj["id"].as<int>();
-          menuItems[MENU_COUNT].name = obj["name"].as<String>();
-          MENU_COUNT++;
-        }
-      }
-      if (menuIndex >= MENU_COUNT) menuIndex = MENU_COUNT - 1;
-      if (menuIndex < 0) menuIndex = 0;
-    }
-  }
-  http.end();
-}
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
 
@@ -148,6 +117,8 @@ void handleMenuSelect(int id) {
 
 void setup()
 {
+  Serial.begin(115200);
+
   // Pins
   pinMode(PIN_ENC_SW, INPUT_PULLUP);
 
@@ -174,7 +145,7 @@ void setup()
   u8g2.sendBuffer();
   delay(500);
 
-  fetchArtists();
+  ApiService::fetchArtists(menuItems, MENU_COUNT, apiArtistsUrl);
 }
 
 
