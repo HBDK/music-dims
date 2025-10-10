@@ -59,27 +59,51 @@ MenuItem menuItems[] = {
   {2, "Artist Two"},
   {3, "Artist Three"},
   {4, "Artist Four"},
-  {5, "Artist Five"}
+  {5, "Artist Five"},
+  {6, "Artist Six"},
+  {7, "Artist Seven"},
+  {8, "Artist Eight"},
+  {9, "Artist Nine"},
+  {10, "Artist Ten"},
+  {11, "Artist Eleven"},
+  {12, "Artist Twelve"},
+  {13, "Artist Thirteen"},
+  {14, "Artist Fourteen"},
+  {15, "Artist Fifteen"},
+  {16, "Artist Sixteen"},
+  {17, "Artist Seventeen"},
+  {18, "Artist Eighteen"},
+  {19, "Artist Nineteen"},
+  {20, "Artist Twenty"}
 };
 constexpr int MENU_COUNT = sizeof(menuItems)/sizeof(menuItems[0]);
 
 int menuIndex = 0;
 bool dotVisible = false;
 
+constexpr int MENU_VISIBLE = 5; // Number of items visible at once
+
 void drawMenu()
 {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
 
-  for (int i = 0; i < MENU_COUNT; ++i) {
+  // Calculate scroll window
+  int scrollStart = menuIndex - MENU_VISIBLE/2;
+  if (scrollStart < 0) scrollStart = 0;
+  if (scrollStart > MENU_COUNT - MENU_VISIBLE) scrollStart = MENU_COUNT - MENU_VISIBLE;
+  if (scrollStart < 0) scrollStart = 0; // handle case where MENU_COUNT < MENU_VISIBLE
+
+  for (int i = 0; i < MENU_VISIBLE && (scrollStart + i) < MENU_COUNT; ++i) {
     int y = 14 + i * 12;
-    if (i == menuIndex) {
+    int itemIdx = scrollStart + i;
+    if (itemIdx == menuIndex) {
       u8g2.drawBox(0, y - 9, 128, 11);
       u8g2.setDrawColor(0);
-      u8g2.drawStr(4, y, menuItems[i].name.c_str());
+      u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
       u8g2.setDrawColor(1);
     } else {
-      u8g2.drawStr(4, y, menuItems[i].name.c_str());
+      u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
     }
   }
 
