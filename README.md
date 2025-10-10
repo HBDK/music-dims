@@ -1,3 +1,33 @@
+# Music DIMS ESP32 Project
+
+This project runs on an ESP32 and drives a BTT Mini12864 v2.0 display with rotary encoder input, WiFi connectivity, and a dynamic menu system for browsing artists and albums from an API server.
+
+## Features
+- Dynamic menu for artists and albums
+- Rotary encoder navigation
+- Back button for menu navigation
+- WiFi connection and API data fetching
+- Album detail page
+- Modular API service
+
+## Hardware
+- ESP32 microcontroller
+- BTT Mini12864 v2.0 display (ST7567 controller)
+- Rotary encoder
+- Back button
+
+## Usage
+1. Clone the repo and open in VS Code with PlatformIO.
+2. Edit `src/secrets.h` with your WiFi and API host info.
+3. Wire up hardware as described above.
+4. Build and upload firmware:
+   ```
+   pio run --target upload
+   ```
+5. Use the encoder and buttons to navigate artists and albums.
+
+---
+
 # Project Secrets
 
 This project uses a `secrets.h` file to store sensitive configuration such as WiFi credentials and API URLs. This file is **not** tracked in version control and should be created manually by each developer.
@@ -12,19 +42,10 @@ This project uses a `secrets.h` file to store sensitive configuration such as Wi
    const char* password = "your_password";
    const char* apiHost = "http://your_host:5000";
    ```
-   In your code, build endpoint URLs like this:
-   ```cpp
-   String apiArtistsUrl = String(apiHost) + "/artists";
-   ```
 3. Make sure `secrets.h` is listed in `.gitignore` so it is not committed to git.
 4. In your code, include it:
    ```cpp
    #include "secrets.h"
    ```
-
-## Why?
-- Keeps secrets out of version control
-- Easy to change per developer or environment
-- No extra build steps required
 
 **Never commit your secrets.h file!**
