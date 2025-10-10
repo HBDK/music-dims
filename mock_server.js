@@ -1,29 +1,46 @@
 const express = require('express');
 const app = express();
 
+// Generate 30 artists with random albums
+const artists = [];
+const albumsByArtist = {};
+const artistNames = [
+  "The Electric Suns", "Neon Skyline", "Velvet Echoes", "Crimson Tide", "Midnight Mirage",
+  "Golden Avenue", "Silver Lining", "Blue Horizon", "Urban Nomads", "Wildflower Drive",
+  "Echo Chamber", "Starlight Parade", "Paper Planes", "Gravity Wells", "Silent Theory",
+  "Dreamcatcher", "Northern Lights", "Retrograde", "Parallel Lines", "Fever Dream",
+  "The Wanderers", "Shadowplay", "Sunset Boulevard", "Crystal Lake", "The Outsiders",
+  "Firefly", "Moonstone", "Atlas", "The Roamers", "Nova Sound"
+];
+const albumWords = [
+  "Reflections", "Odyssey", "Pulse", "Fragments", "Voyage", "Spectrum", "Origins", "Mirage",
+  "Horizons", "Echoes", "Gravity", "Shadows", "Lights", "Dreams", "Waves", "Stories",
+  "Blueprints", "Signals", "Canvas", "Motion", "Chapters", "Frequencies", "Elements", "Fields"
+];
+
+function getRandomAlbumName() {
+  const word1 = albumWords[Math.floor(Math.random() * albumWords.length)];
+  const word2 = albumWords[Math.floor(Math.random() * albumWords.length)];
+  return `${word1} of ${word2}`;
+}
+
+for (let i = 1; i <= 30; i++) {
+  artists.push({ id: i, name: artistNames[i-1] });
+  const albumCount = Math.floor(Math.random() * 8) + 1;
+  albumsByArtist[i] = [];
+  for (let j = 1; j <= albumCount; j++) {
+    albumsByArtist[i].push({ id: i * 100 + j, name: getRandomAlbumName() });
+  }
+}
+
 app.get('/artists', (req, res) => {
-  res.json([
-    {id: 1, name: 'Artist One'},
-    {id: 2, name: 'Artist Two'},
-    {id: 3, name: 'Artist Three'},
-    {id: 4, name: 'Artist Four'},
-    {id: 5, name: 'Artist Five'},
-    {id: 6, name: 'Artist Six'},
-    {id: 7, name: 'Artist Seven'},
-    {id: 8, name: 'Artist Eight'},
-    {id: 9, name: 'Artist Nine'},
-    {id: 10, name: 'Artist Ten'},
-    {id: 11, name: 'Artist Eleven'},
-    {id: 12, name: 'Artist Twelve'},
-    {id: 13, name: 'Artist Thirteen'},
-    {id: 14, name: 'Artist Fourteen'},
-    {id: 15, name: 'Artist Fifteen'},
-    {id: 16, name: 'Artist Sixteen'},
-    {id: 17, name: 'Artist Seventeen'},
-    {id: 18, name: 'Artist Eighteen'},
-    {id: 19, name: 'Artist Nineteen'},
-    {id: 20, name: 'Artist Twenty'}
-  ]);
+  res.json(artists);
+});
+
+app.get('/artists/:id/albums', (req, res) => {
+  const id = req.params.id;
+  const albums = albumsByArtist[id] || [];
+  res.json(albums);
 });
 
 app.listen(5000, () => console.log('Mock server running on port 5000'));
