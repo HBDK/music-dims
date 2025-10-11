@@ -10,3 +10,5 @@ node_modules
 package-lock.json
 package.json
 src/secrets.h
+backend/MusicDimsApi/.idea/.idea.MusicDimsApi/.idea
+nohup.out
