@@ -1,6 +1,0 @@
-@MusicDimsApi_HostAddress = http://localhost:5012
-
-GET {{MusicDimsApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
