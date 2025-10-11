@@ -18,7 +18,6 @@ void DetailScreen::handleEncoderDec() {
 }
 
 ScreenAction DetailScreen::handleBack(uint32_t pressLengthMs) {
-    currentDetail = MenuItem();
     return ScreenAction::SwitchToMenu;
 }
 

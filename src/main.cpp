@@ -63,8 +63,6 @@ Adafruit_NeoPixel rgbBacklight(NUM_PIXELS, PIN_LCD_RGB, NEO_GRB + NEO_KHZ800);
 MenuItem menuItems[400];
 int menuCount = 0;
 int menuIndex = 0;
-String currentBackLink = "";
-MenuItem currentDetail;
 
 IScreen* currentScreen = nullptr;
 MenuScreen* menuScreen = nullptr;
@@ -73,67 +71,7 @@ DetailScreen* detailScreen = nullptr;
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
 
-void drawMenu()
-{
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x10_tf);
 
-  if (!currentDetail.id.isEmpty()) {
-    // Detail page
-    u8g2.drawStr(0, 16, currentDetail.name.c_str());
-    u8g2.sendBuffer();
-    return;
-  }
-
-  if (menuCount == 0) {
-    u8g2.drawStr(0, 24, "No items found!");
-    u8g2.drawStr(0, 40, "Check API & WiFi");
-  } else {
-    int scrollStart = menuIndex - MENU_VISIBLE/2;
-    if (scrollStart < 0) scrollStart = 0;
-    if (scrollStart > menuCount - MENU_VISIBLE) scrollStart = menuCount - MENU_VISIBLE;
-    if (scrollStart < 0) scrollStart = 0;
-    for (int i = 0; i < MENU_VISIBLE && (scrollStart + i) < menuCount; ++i) {
-      int y = 14 + i * 12;
-      int itemIdx = scrollStart + i;
-      if (itemIdx == menuIndex) {
-        u8g2.drawBox(0, y - 9, 128, 11);
-        u8g2.setDrawColor(0);
-        u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
-        u8g2.setDrawColor(1);
-      } else {
-        u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
-      }
-    }
-  }
-  u8g2.sendBuffer();
-}
-
-void handleMenuSelect(String id) {
-  MenuItem& selected = menuItems[menuIndex];
-  if (selected.link.startsWith("player:")) {
-    currentDetail = selected;
-    Serial.print("Selected for playback: ");
-    Serial.print(selected.id);
-    Serial.print(", name: ");
-    Serial.println(selected.name);
-    bool playOk = ApiService::postPlayMedia(selected.link);
-    if (!playOk) Serial.println("Failed to POST play to media endpoint");
-  } else {
-    // Fetch next menu level using link
-    bool ok = ApiService::fetchMenuItems(menuItems, menuCount, selected.link);
-    menuIndex = 0;
-    currentBackLink = ApiService::backLink;
-    currentDetail = MenuItem();
-    Serial.print("Selected id: ");
-    Serial.print(selected.id);
-    Serial.print("Selected link: ");
-    Serial.print(selected.link);
-    Serial.print(", name: ");
-    Serial.println(selected.name);
-    if (!ok) Serial.println("Failed to fetch next menu!");
-  }
-}
 
 void setup()
 {
@@ -175,19 +113,10 @@ void setup()
 
   ApiService::fetchMenuItems(menuItems, menuCount, "/");
   menuScreen = new MenuScreen(menuItems, menuCount, menuIndex, u8g2);
-  detailScreen = new DetailScreen(currentDetail, u8g2);
+  // detailScreen = new DetailScreen(currentDetail, u8g2);
   currentScreen = menuScreen;
 }
 
-void handleBack() {
-  bool ok = ApiService::fetchMenuItems(menuItems, menuCount, currentBackLink);
-  menuIndex = 0;
-  currentBackLink = "";
-  currentDetail = MenuItem();
-  Serial.println("Back to previous menu");
-  if (!ok) Serial.println("Failed to fetch previous menu!");
-  return;
-}
 
 void handleEncoder()
 {
@@ -232,6 +161,8 @@ void loop()
       uint32_t pressLength = millis() - dotPressStart;
       ScreenAction action = currentScreen->handleDotRelease(pressLength);
       if (action == ScreenAction::SwitchToDetail) {
+        delete detailScreen;
+        detailScreen = new DetailScreen(menuItems[menuIndex], u8g2);
         currentScreen = detailScreen;
       } else if (action == ScreenAction::SwitchToMenu) {
         currentScreen = menuScreen;
