@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicDimsApi.Endpoints.GetArtists.Gateways;
+using MusicDimsApi.Endpoints.Models;
 
 namespace MusicDimsApi.Endpoints.GetArtists;
 
@@ -20,7 +21,8 @@ public static class GetArtistsEndpoint
         app.MapGet("/artists", async ([FromServices] IHaGateway haGateway) =>
         {
             var values = await haGateway.GetLibrary();
-            return values;
+            var result = new NavigationResponseDto(values.ToArray(), "");
+            return result;
         }).WithName("get-artists");
  
         return app;

@@ -17,14 +17,19 @@ public:
       StaticJsonDocument<16384> doc;
       DeserializationError err = deserializeJson(doc, payload);
       if (!err) {
-        JsonArray arr = doc.as<JsonArray>();
         count = 0;
-        for (JsonObject obj : arr) {
-          if (count < 400) {
-            items[count].id = obj["id"].as<String>();
-            items[count].name = obj["name"].as<String>();
-            count++;
+        // Only parse object with 'items' array
+        if (doc.containsKey("items")) {
+          JsonArray arr = doc["items"].as<JsonArray>();
+          for (JsonObject obj : arr) {
+            if (count < 400) {
+              items[count].id = obj["id"].as<String>();
+              items[count].name = obj["name"].as<String>();
+              items[count].link = obj["link"].as<String>();
+              count++;
+            }
           }
+          // Optionally handle back_link here if needed
         }
         http.end();
         return true;
