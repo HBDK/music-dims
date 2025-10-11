@@ -18,7 +18,7 @@ This project runs on an ESP32 and drives a BTT Mini12864 v2.0 display with rotar
 
 ## Usage
 1. Clone the repo and open in VS Code with PlatformIO.
-2. Edit `src/secrets.h` with your WiFi and API host info.
+2. Edit `src/secrets.h` with your WiFi, API host, and player name info.
 3. Wire up hardware as described above.
 4. Build and upload firmware:
    ```
@@ -41,6 +41,7 @@ This project uses a `secrets.h` file to store sensitive configuration such as Wi
    const char* ssid = "your_wifi";
    const char* password = "your_password";
    const char* apiHost = "http://your_host:5000";
+   const char* playerName = "bathroom_speaker"; // Used for player control endpoints
    ```
 3. Make sure `secrets.h` is listed in `.gitignore` so it is not committed to git.
 4. In your code, include it:

@@ -54,7 +54,7 @@ public:
   }
 
   static bool postPlayerStop() {
-    String url = String(apiHost) + "/players/1/stop";
+    String url = String(apiHost) + "/players/" + String(playerName) + "/stop";
     HTTPClient http;
     http.begin(url.c_str());
     int httpCode = http.POST(""); // Empty body

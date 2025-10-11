@@ -10,7 +10,7 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
 
     public async Task StopPlayback(string id)
     {
-        var body = new GetLibraryPostBody("media_player.bathroom_speaker");
+        var body = new GetLibraryPostBody($"media_player.{id}");
         var client = clientFactory.CreateClient(HomeAssistantClient.Name);
         var response = await client.PostAsync(GetLibraryRoute, new StringContent(JsonSerializer.Serialize(body), System.Text.Encoding.UTF8, "application/json"));
 
