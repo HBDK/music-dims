@@ -96,5 +96,3 @@ public:
   }
 };
 
-// Define static member
-String ApiService::backLink = "";

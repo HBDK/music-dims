@@ -1,3 +1,7 @@
+#include "screen_interface.h"
+#include "menu_screen.h"
+#include "detail_screen.h"
+#include "screen_action.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
 
@@ -55,11 +59,16 @@ Adafruit_NeoPixel rgbBacklight(NUM_PIXELS, PIN_LCD_RGB, NEO_GRB + NEO_KHZ800);
 #include "secrets.h"
 
 // Dynamic menu storage
-MenuItem menuItems[400]; // used for all menu levels
+
+MenuItem menuItems[400];
 int menuCount = 0;
 int menuIndex = 0;
 String currentBackLink = "";
 MenuItem currentDetail;
+
+IScreen* currentScreen = nullptr;
+MenuScreen* menuScreen = nullptr;
+DetailScreen* detailScreen = nullptr;
 
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
@@ -165,6 +174,9 @@ void setup()
   delay(500);
 
   ApiService::fetchMenuItems(menuItems, menuCount, "/");
+  menuScreen = new MenuScreen(menuItems, menuCount, menuIndex, u8g2);
+  detailScreen = new DetailScreen(currentDetail, u8g2);
+  currentScreen = menuScreen;
 }
 
 void handleBack() {
@@ -187,24 +199,14 @@ void handleEncoder()
   static int32_t acc = 0;
   acc += delta;
 
-  if (!currentDetail.id.isEmpty()) {
-    // On detail page, use encoder for volume
-    while (acc >= 2) {
-      acc -= 2;
-      bool ok = ApiService::postVolumeUp();
-      if (!ok) Serial.println("Failed to POST volume up");
-    }
-    while (acc <= -2) {
-      acc += 2;
-      bool ok = ApiService::postVolumeDown();
-      if (!ok) Serial.println("Failed to POST volume down");
-    }
-  } else {
-    // Normal menu navigation
-    while (acc >= 2) { acc -= 2; menuIndex++; }
-    while (acc <= -2){ acc += 2; menuIndex--; }
-    if (menuIndex < 0) menuIndex = menuCount - 1;
-    if (menuIndex >= menuCount) menuIndex = 0;
+  // Delegate encoder events to current screen
+  while (acc >= 2) {
+    acc -= 2;
+    currentScreen->handleEncoderInc();
+  }
+  while (acc <= -2) {
+    acc += 2;
+    currentScreen->handleEncoderDec();
   }
 }
 
@@ -215,21 +217,31 @@ void loop()
   // Button: select menu item
   static bool lastDotState = false;
   static bool lastBackState = false;
+  static uint32_t dotPressStart = 0;
   static uint32_t backPressStart = 0;
   static bool longBackSent = false;
 
-  if (debouncedButtonPressed(PIN_ENC_SW)) {
+  // Dot button
+  if (digitalRead(PIN_ENC_SW) == LOW) {
     if (!lastDotState) {
-      if (currentDetail.id.isEmpty()) {
-        handleMenuSelect(menuItems[menuIndex].id);
-      }
+      dotPressStart = millis();
       lastDotState = true;
     }
   } else {
+    if (lastDotState) {
+      uint32_t pressLength = millis() - dotPressStart;
+      ScreenAction action = currentScreen->handleDotRelease(pressLength);
+      if (action == ScreenAction::SwitchToDetail) {
+        currentScreen = detailScreen;
+      } else if (action == ScreenAction::SwitchToMenu) {
+        currentScreen = menuScreen;
+      }
+    }
     lastDotState = false;
+    dotPressStart = 0;
   }
 
-  // Back button: short and long press
+  // Back button
   if (digitalRead(PIN_BACK_BTN) == LOW) {
     if (!lastBackState) {
       backPressStart = millis();
@@ -245,13 +257,19 @@ void loop()
     }
   } else {
     if (lastBackState && !longBackSent) {
-      handleBack();
+      uint32_t pressLength = millis() - backPressStart;
+      ScreenAction action = currentScreen->handleBack(pressLength);
+      if (action == ScreenAction::SwitchToDetail) {
+        currentScreen = detailScreen;
+      } else if (action == ScreenAction::SwitchToMenu) {
+        currentScreen = menuScreen;
+      }
     }
     lastBackState = false;
     backPressStart = 0;
     longBackSent = false;
   }
 
-  drawMenu();
+  currentScreen->drawCall();
   delay(10);
 }
