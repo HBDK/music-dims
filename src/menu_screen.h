@@ -13,9 +13,11 @@ public:
     ScreenAction handleBackRelease(uint32_t pressLengthMs) override;
     ScreenAction handleDotRelease(uint32_t pressLengthMs) override;
     void drawCall() override;
+
 private:
     MenuItem* menuItems;
     int& menuCount;
     int& menuIndex;
     U8G2& u8g2;
+    void drawError();
 };

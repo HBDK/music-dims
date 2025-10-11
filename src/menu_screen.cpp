@@ -51,12 +51,19 @@ ScreenAction MenuScreen::handleDotRelease(uint32_t pressLengthMs) {
     }
 }
 
+void MenuScreen::drawError() {
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(0, 24, "No items found!");
+    u8g2.drawStr(0, 40, "Check API & WiFi");
+    u8g2.sendBuffer();
+}
+
 void MenuScreen::drawCall() {
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_6x10_tf);
     if (menuCount == 0) {
-        u8g2.drawStr(0, 24, "No items found!");
-        u8g2.drawStr(0, 40, "Check API & WiFi");
+        drawError();
     } else {
         int scrollStart = menuIndex - 2;
         if (scrollStart < 0) scrollStart = 0;
