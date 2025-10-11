@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include "input_service.h"
+#include "light_service.h"
 
 // -------------------- Pin Map (change if you rewired) --------------------
 constexpr uint8_t PIN_LCD_SCK  = 18; // ESP32 VSPI SCK
@@ -22,13 +23,6 @@ U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(
   /* reset=*/ PIN_LCD_RST
 );
 // Note: HW_SPI uses the board’s default MOSI/SCK (we wired to VSPI defaults).
-
-#include <Adafruit_NeoPixel.h>
-
-constexpr uint8_t PIN_LCD_RGB = 21; // Change to your actual NeoPixel data pin
-constexpr uint8_t NUM_PIXELS = 3;   // Usually 1 for backlight
-
-Adafruit_NeoPixel rgbBacklight(NUM_PIXELS, PIN_LCD_RGB, NEO_GRB + NEO_KHZ800);
 
 // -------------------- WiFi & API Integration --------------------
 // API service and MenuItem struct
@@ -49,6 +43,7 @@ MenuScreen* menuScreen = nullptr;
 DetailScreen* detailScreen = nullptr;
 
 InputService* inputService = nullptr;
+LightService* lightService = nullptr;
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
 
@@ -56,18 +51,14 @@ void setup()
 {
   Serial.begin(115200);
 
-  rgbBacklight.begin();
-  rgbBacklight.setBrightness(100); // Optional: 0-255
-  rgbBacklight.setPixelColor(0, rgbBacklight.Color(32, 0, 32)); // Purple (R,G,B)
-  rgbBacklight.setPixelColor(1, rgbBacklight.Color(32, 0, 32)); // Purple (R,G,B)
-  rgbBacklight.setPixelColor(2, rgbBacklight.Color(128, 0, 128)); // Purple (R,G,B)
-  rgbBacklight.show();
-
+  // LightService setup
+  lightService = new LightService();
+  lightService->begin();
 
   // InputService setup
   menuScreen = new MenuScreen(menuItems, menuCount, menuIndex, u8g2);
   currentScreen = menuScreen;
-  inputService = new InputService(currentScreen);
+  inputService = new InputService(currentScreen, lightService);
   inputService->begin();
 
   // Display
@@ -94,7 +85,6 @@ void setup()
 
 void loop()
 {
-
   ScreenAction action = inputService->poll();
 
   if (action == ScreenAction::SwitchToDetail) {

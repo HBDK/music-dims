@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "screen_interface.h"
+#include "light_service.h"
 
 class InputService {
 public:
@@ -9,14 +10,12 @@ public:
     static constexpr uint8_t PIN_ENC_SW   = 25;
     static constexpr uint8_t PIN_BACK_BTN = 27;
 
-    InputService(IScreen* screen);
+    InputService(IScreen *screen, LightService *light);
     void begin();
     ScreenAction poll();
-
-public:
-    // Allow main.cpp to update screen pointer after screen switches
     IScreen* currentScreen;
 private:
+    LightService* lightService;
     void handleEncoder();
     int32_t lastEncoder;
     int encoderDelta;

@@ -5,10 +5,10 @@
 static ESP32Encoder encoder;
 
 
-InputService::InputService(IScreen* screen)
+InputService::InputService(IScreen* screen, LightService* light)
         : lastEncoder(0), encoderDelta(0), lastDotState(false), lastBackState(false),
             dotPressStart(0), backPressStart(0),
-            dotReleased(false), backReleased(false), currentScreen(screen) {}
+            dotReleased(false), backReleased(false), currentScreen(screen), lightService(light){}
 
 void InputService::begin() {
     pinMode(PIN_ENC_SW, INPUT_PULLUP);
@@ -53,6 +53,7 @@ ScreenAction InputService::poll() {
         uint32_t dotPressLength = millis() - dotPressStart;
         action = currentScreen->handleDotRelease(dotPressLength);
     }
+
     lastDotState = dotState;
 
     if (action != ScreenAction::None) {
@@ -67,7 +68,19 @@ ScreenAction InputService::poll() {
     } else if (!backState && lastBackState) {
         uint32_t backPressLength = millis() - backPressStart;
         action = currentScreen->handleBackRelease(backPressLength);
+        lightService->setButtonLed(32, 0, 32);
+        lightService->show();
     }
+
+    if (backState)
+    {
+        uint32_t pressDuration = millis() - backPressStart;
+        if (pressDuration > 1000) {
+            lightService->setButtonLed(0, 0, 0);
+            lightService->show();
+        }
+    }
+
     lastBackState = backState;
     return action;
 }
