@@ -1,3 +1,4 @@
+
 #pragma once
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -60,6 +61,24 @@ public:
     HTTPClient http;
     http.begin(url.c_str());
     int httpCode = http.POST(""); // Empty body
+    http.end();
+    return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
+  }
+
+  static bool postVolumeUp() {
+    String url = String(apiHost) + "/players/" + String(playerName) + "/volume-up";
+    HTTPClient http;
+    http.begin(url.c_str());
+    int httpCode = http.POST("");
+    http.end();
+    return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
+  }
+
+  static bool postVolumeDown() {
+    String url = String(apiHost) + "/players/" + String(playerName) + "/volume-down";
+    HTTPClient http;
+    http.begin(url.c_str());
+    int httpCode = http.POST("");
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
   }

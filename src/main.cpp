@@ -204,10 +204,26 @@ void handleEncoder()
 
   static int32_t acc = 0;
   acc += delta;
-  while (acc >= 2) { acc -= 2; menuIndex++; }
-  while (acc <= -2){ acc += 2; menuIndex--; }
-  if (menuIndex < 0) menuIndex = menuCount - 1;
-  if (menuIndex >= menuCount) menuIndex = 0;
+
+  if (showingAlbumDetail) {
+    // On album detail page, use encoder for volume
+    while (acc >= 2) {
+      acc -= 2;
+      bool ok = ApiService::postVolumeUp();
+      if (!ok) Serial.println("Failed to POST volume up");
+    }
+    while (acc <= -2) {
+      acc += 2;
+      bool ok = ApiService::postVolumeDown();
+      if (!ok) Serial.println("Failed to POST volume down");
+    }
+  } else {
+    // Normal menu navigation
+    while (acc >= 2) { acc -= 2; menuIndex++; }
+    while (acc <= -2){ acc += 2; menuIndex--; }
+    if (menuIndex < 0) menuIndex = menuCount - 1;
+    if (menuIndex >= menuCount) menuIndex = 0;
+  }
 }
 
 void loop()
