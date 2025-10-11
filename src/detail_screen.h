@@ -10,7 +10,7 @@ public:
     DetailScreen(MenuItem& detail, U8G2& display);
     void handleEncoderInc() override;
     void handleEncoderDec() override;
-    ScreenAction handleBack(uint32_t pressLengthMs) override;
+    ScreenAction handleBackRelease(uint32_t pressLengthMs) override;
     ScreenAction handleDotRelease(uint32_t pressLengthMs) override;
     void drawCall() override;
 private:

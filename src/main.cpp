@@ -148,7 +148,6 @@ void loop()
   static bool lastBackState = false;
   static uint32_t dotPressStart = 0;
   static uint32_t backPressStart = 0;
-  static bool longBackSent = false;
 
   // Dot button
   if (digitalRead(PIN_ENC_SW) == LOW) {
@@ -176,20 +175,12 @@ void loop()
   if (digitalRead(PIN_BACK_BTN) == LOW) {
     if (!lastBackState) {
       backPressStart = millis();
-      longBackSent = false;
       lastBackState = true;
-    } else {
-      // If held for >1s, send stop
-      if (!longBackSent && millis() - backPressStart > 1000) {
-        bool stopOk = ApiService::postPlayerStop();
-        if (!stopOk) Serial.println("Failed to POST stop to player endpoint");
-        longBackSent = true;
-      }
-    }
+    } 
   } else {
-    if (lastBackState && !longBackSent) {
+    if (lastBackState) {
       uint32_t pressLength = millis() - backPressStart;
-      ScreenAction action = currentScreen->handleBack(pressLength);
+      ScreenAction action = currentScreen->handleBackRelease(pressLength);
       if (action == ScreenAction::SwitchToDetail) {
         currentScreen = detailScreen;
       } else if (action == ScreenAction::SwitchToMenu) {
@@ -198,7 +189,6 @@ void loop()
     }
     lastBackState = false;
     backPressStart = 0;
-    longBackSent = false;
   }
 
   currentScreen->drawCall();

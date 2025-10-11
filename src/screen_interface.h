@@ -8,7 +8,7 @@ public:
     virtual ~IScreen() {}
     virtual void handleEncoderInc() = 0;
     virtual void handleEncoderDec() = 0;
-    virtual ScreenAction handleBack(uint32_t pressLengthMs) = 0;
+    virtual ScreenAction handleBackRelease(uint32_t pressLengthMs) = 0;
     virtual ScreenAction handleDotRelease(uint32_t pressLengthMs) = 0;
     virtual void drawCall() = 0;
 };

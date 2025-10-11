@@ -3,6 +3,7 @@
 #include "screen_action.h"
 #include "api_service.h"
 #include <Arduino.h>
+#include "player_utils.h"
 
 MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, U8G2& display)
     : menuItems(items), menuCount(count), menuIndex(index), u8g2(display) {}
@@ -17,8 +18,11 @@ void MenuScreen::handleEncoderDec() {
     if (menuIndex < 0) menuIndex = menuCount - 1;
 }
 
-ScreenAction MenuScreen::handleBack(uint32_t pressLengthMs) {
-    // Go back using backLink
+ScreenAction MenuScreen::handleBackRelease(uint32_t pressLengthMs) {
+    if (PlayerUtils::StopIfLongPress(pressLengthMs)) {
+        Serial.println("Playback stopped due to long press");
+        return ScreenAction::None;
+    }
     bool ok = ApiService::fetchMenuItems(menuItems, menuCount, ApiService::backLink);
     menuIndex = 0;
     if (!ok) Serial.println("Failed to fetch previous menu!");

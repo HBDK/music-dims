@@ -1,8 +1,8 @@
-
 #include "detail_screen.h"
 #include "screen_action.h"
 #include "api_service.h"
 #include <Arduino.h>
+#include "player_utils.h"
 
 DetailScreen::DetailScreen(MenuItem& detail, U8G2& display)
     : currentDetail(detail), u8g2(display) {}
@@ -17,7 +17,11 @@ void DetailScreen::handleEncoderDec() {
     if (!ok) Serial.println("Failed to POST volume down");
 }
 
-ScreenAction DetailScreen::handleBack(uint32_t pressLengthMs) {
+ScreenAction DetailScreen::handleBackRelease(uint32_t pressLengthMs) {
+    if (PlayerUtils::StopIfLongPress(pressLengthMs)) {
+        Serial.println("Playback stopped due to long press");
+        return ScreenAction::None;
+    }
     return ScreenAction::SwitchToMenu;
 }
 
