@@ -1,0 +1,73 @@
+#include "input_service.h"
+#include <Arduino.h>
+#include <ESP32Encoder.h>
+
+static ESP32Encoder encoder;
+
+
+InputService::InputService(IScreen* screen)
+        : lastEncoder(0), encoderDelta(0), lastDotState(false), lastBackState(false),
+            dotPressStart(0), backPressStart(0),
+            dotReleased(false), backReleased(false), currentScreen(screen) {}
+
+void InputService::begin() {
+    pinMode(PIN_ENC_SW, INPUT_PULLUP);
+    pinMode(PIN_BACK_BTN, INPUT_PULLUP);
+    ESP32Encoder::useInternalWeakPullResistors = puType::none;
+    encoder.attachHalfQuad(PIN_ENC_A, PIN_ENC_B);
+    encoder.setCount(0);
+    lastEncoder = encoder.getCount();
+}
+
+void InputService::handleEncoder()
+{
+  int32_t current = encoder.getCount();
+  int32_t delta = current - lastEncoder;
+  lastEncoder = current;
+
+  static int32_t acc = 0;
+  acc += delta;
+
+  // Delegate encoder events to current screen
+  while (acc >= 2) {
+    acc -= 2;
+    currentScreen->handleEncoderInc();
+  }
+  while (acc <= -2) {
+    acc += 2;
+    currentScreen->handleEncoderDec();
+  }
+}
+
+ScreenAction InputService::poll() {
+
+    ScreenAction action = ScreenAction::None;
+    handleEncoder();
+
+    // Dot button
+    bool dotState = digitalRead(PIN_ENC_SW) == LOW;
+    dotReleased = false;
+    if (dotState && !lastDotState) {
+        dotPressStart = millis();
+    } else if (!dotState && lastDotState) {
+        uint32_t dotPressLength = millis() - dotPressStart;
+        action = currentScreen->handleDotRelease(dotPressLength);
+    }
+    lastDotState = dotState;
+
+    if (action != ScreenAction::None) {
+        return action;
+    }
+
+    // Back button
+    bool backState = digitalRead(PIN_BACK_BTN) == LOW;
+    backReleased = false;
+    if (backState && !lastBackState) {
+        backPressStart = millis();
+    } else if (!backState && lastBackState) {
+        uint32_t backPressLength = millis() - backPressStart;
+        action = currentScreen->handleBackRelease(backPressLength);
+    }
+    lastBackState = backState;
+    return action;
+}
