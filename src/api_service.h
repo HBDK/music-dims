@@ -1,4 +1,3 @@
-
 #pragma once
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -33,6 +32,16 @@ public:
     }
     http.end();
     return false;
+  }
+  static bool postPlayMedia(const String& link) {
+    String url = String(apiHost) + "/players/" + String(playerName) + "/play";
+    HTTPClient http;
+    http.begin(url.c_str());
+    http.addHeader("Content-Type", "application/json");
+    String body = String("{\"link\":\"") + link + "\"}";
+    int httpCode = http.POST(body);
+    http.end();
+    return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
   }
 
   static bool fetchArtists(MenuItem* items, int& count) {

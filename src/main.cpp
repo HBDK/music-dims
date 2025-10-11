@@ -134,6 +134,57 @@ void handleMenuSelect(String id) {
   bool playOk = ApiService::postAlbumPlay(currentAlbum.id);
   if (!playOk) Serial.println("Failed to POST play to album endpoint");
   }
+  MenuItem& selected = menuItems[menuIndex];
+  if (!showingAlbums) {
+    // If link starts with "player:", play media
+    if (selected.link.startsWith("player:")) {
+      // Show album detail and POST to play media
+      currentAlbum.id = selected.id;
+      currentAlbum.name = selected.name;
+      currentAlbum.link = selected.link;
+      showingAlbumDetail = true;
+      Serial.print("Selected album for playback: ");
+      Serial.print(currentAlbum.id);
+      Serial.print(", name: ");
+      Serial.println(currentAlbum.name);
+      // POST to play media endpoint
+      bool playOk = ApiService::postPlayMedia(currentAlbum.link);
+      if (!playOk) Serial.println("Failed to POST play to media endpoint");
+    } else {
+      // Otherwise, treat link as path to fetch albums
+      bool ok = ApiService::fetchAlbums(menuItems, menuCount, selected.link);
+      menuIndex = 0;
+      showingAlbums = true;
+      currentArtist.id = selected.id;
+      currentArtist.name = selected.name;
+      currentArtist.link = selected.link;
+      Serial.print("Selected artist id: ");
+      Serial.print(selected.id);
+      Serial.print(", name: ");
+      Serial.println(selected.name);
+      if (!ok) Serial.println("Failed to fetch albums!");
+    }
+  } else {
+    // Album menu: same logic as above
+    if (selected.link.startsWith("player:")) {
+      currentAlbum.id = selected.id;
+      currentAlbum.name = selected.name;
+      currentAlbum.link = selected.link;
+      showingAlbumDetail = true;
+      Serial.print("Selected album for playback: ");
+      Serial.print(currentAlbum.id);
+      Serial.print(", name: ");
+      Serial.println(currentAlbum.name);
+      bool playOk = ApiService::postPlayMedia(currentAlbum.link);
+      if (!playOk) Serial.println("Failed to POST play to media endpoint");
+    } else {
+      // If not player: just print info
+      Serial.print("Selected album id: ");
+      Serial.print(selected.id);
+      Serial.print(", name: ");
+      Serial.println(selected.name);
+    }
+  }
 }
 
 void setup()

@@ -2,6 +2,7 @@ using MusicDimsApi.Clients;
 using MusicDimsApi.Endpoints.GetArtistAlbums;
 using MusicDimsApi.Endpoints.GetArtists;
 using MusicDimsApi.Endpoints.PostPlayAlbum;
+using MusicDimsApi.Endpoints.PostPlayMedia;
 using MusicDimsApi.Endpoints.PostStopPlayBack;
 using MusicDimsApi.Endpoints.PostVolumeUp;
 using MusicDimsApi.Endpoints.PostVolumeDown;
@@ -16,6 +17,9 @@ builder.AddPostPlayAlbumServices();
 builder.AddPostStopPlayBackServices();
 builder.AddPostVolumeUpServices();
 builder.AddPostVolumeDownServices();
+builder.AddPostPlayMediaServices();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -25,5 +29,7 @@ app.MapPostPlayAlbumEndpoint();
 app.MapPostStopPlayBackEndpoint();
 app.MapPostVolumeUpEndpoint();
 app.MapPostVolumeDownEndpoint();
-
+app.MapPostPlayMediaEndpoint();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.Run();
