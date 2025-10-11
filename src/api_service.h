@@ -43,4 +43,13 @@ public:
     String url = String(apiHost) + "/artists/" + artistId + "/albums";
     return fetchMenuItems(items, count, url);
   }
+
+  static bool postAlbumPlay(const String& albumId) {
+    String url = String(apiHost) + "/albums/" + albumId + "/play";
+    HTTPClient http;
+    http.begin(url.c_str());
+    int httpCode = http.POST(""); // Empty body
+    http.end();
+    return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
+  }
 };

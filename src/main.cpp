@@ -109,10 +109,6 @@ void drawMenu()
 
 void handleMenuSelect(String id) {
   if (!showingAlbums) {
-    // Fetch albums and overwrite menuItems
-    bool ok = ApiService::fetchAlbums(menuItems, menuCount, id);
-    menuIndex = 0;
-    showingAlbums = true;
     // Save current artist info for detail page
     currentArtist.id = id;
     currentArtist.name = menuItems[menuIndex].name;
@@ -120,16 +116,23 @@ void handleMenuSelect(String id) {
     Serial.print(id);
     Serial.print(", name: ");
     Serial.println(menuItems[menuIndex].name);
+    // Fetch albums and overwrite menuItems
+    bool ok = ApiService::fetchAlbums(menuItems, menuCount, id);
+    menuIndex = 0;
+    showingAlbums = true;
     if (!ok) Serial.println("Failed to fetch albums!");
   } else {
-    // Show album detail page
-    currentAlbum.id = menuItems[menuIndex].id;
-    currentAlbum.name = menuItems[menuIndex].name;
-    showingAlbumDetail = true;
-    Serial.print("Selected album id: ");
-    Serial.print(currentAlbum.id);
-    Serial.print(", name: ");
-    Serial.println(currentAlbum.name);
+  // Show album detail page
+  currentAlbum.id = menuItems[menuIndex].id;
+  currentAlbum.name = menuItems[menuIndex].name;
+  showingAlbumDetail = true;
+  Serial.print("Selected album id: ");
+  Serial.print(currentAlbum.id);
+  Serial.print(", name: ");
+  Serial.println(currentAlbum.name);
+  // POST to play endpoint
+  bool playOk = ApiService::postAlbumPlay(currentAlbum.id);
+  if (!playOk) Serial.println("Failed to POST play to album endpoint");
   }
 }
 
