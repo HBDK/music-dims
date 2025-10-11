@@ -7,7 +7,9 @@
 
 class ApiService {
 public:
-  static bool fetchMenuItems(MenuItem* items, int& count, const String& url) {
+  static String backLink;
+  static bool fetchMenuItems(MenuItem* items, int& count, const String& path) {
+    String url = String(apiHost) + path;
     if (WiFi.status() != WL_CONNECTED) return false;
     HTTPClient http;
     http.begin(url.c_str());
@@ -29,7 +31,12 @@ public:
               count++;
             }
           }
-          // Optionally handle back_link here if needed
+        }
+        // Save back_link if present
+        if (doc.containsKey("back_link")) {
+          backLink = doc["back_link"].as<String>();
+        } else {
+          backLink = "";
         }
         http.end();
         return true;
@@ -50,13 +57,7 @@ public:
   }
 
   static bool fetchArtists(MenuItem* items, int& count) {
-    String url = String(apiHost) + "/artists";
-    return fetchMenuItems(items, count, url);
-  }
-
-  static bool fetchAlbums(MenuItem* items, int& count, String artistId) {
-    String url = String(apiHost) + "/artists/" + artistId + "/albums";
-    return fetchMenuItems(items, count, url);
+    return fetchMenuItems(items, count, "/artists");
   }
 
   static bool postAlbumPlay(const String& albumId) {
@@ -97,3 +98,6 @@ public:
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
   }
 };
+
+// Define static member
+String ApiService::backLink = "";

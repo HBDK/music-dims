@@ -23,8 +23,6 @@ U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(
 );
 // Note: HW_SPI uses the board’s default MOSI/SCK (we wired to VSPI defaults).
 
-// ...existing code...
-
 // -------------------- Encoder (ESP32Encoder) --------------------
 #include <ESP32Encoder.h>
 ESP32Encoder encoder;
@@ -57,15 +55,11 @@ Adafruit_NeoPixel rgbBacklight(NUM_PIXELS, PIN_LCD_RGB, NEO_GRB + NEO_KHZ800);
 #include "secrets.h"
 
 // Dynamic menu storage
-MenuItem menuItems[400]; // used for both artists and albums
+MenuItem menuItems[400]; // used for all menu levels
 int menuCount = 0;
 int menuIndex = 0;
-bool showingAlbums = false;
-
-// Album detail page state
-bool showingAlbumDetail = false;
-MenuItem currentAlbum;
-MenuItem currentArtist;
+String currentBackLink = "";
+MenuItem currentDetail;
 
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
@@ -75,17 +69,16 @@ void drawMenu()
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
 
-  if (showingAlbumDetail) {
-    // Album detail page
-    u8g2.drawStr(0, 16, currentArtist.name.c_str());
-    u8g2.drawStr(0, 32, currentAlbum.name.c_str());
+  if (!currentDetail.id.isEmpty()) {
+    // Detail page
+    u8g2.drawStr(0, 16, currentDetail.name.c_str());
     u8g2.sendBuffer();
     return;
   }
 
   if (menuCount == 0) {
-    u8g2.drawStr(0, 24, showingAlbums ? "No albums found!" : "No artists found!");
-    if (!showingAlbums) u8g2.drawStr(0, 40, "Check API & WiFi");
+    u8g2.drawStr(0, 24, "No items found!");
+    u8g2.drawStr(0, 40, "Check API & WiFi");
   } else {
     int scrollStart = menuIndex - MENU_VISIBLE/2;
     if (scrollStart < 0) scrollStart = 0;
@@ -108,82 +101,28 @@ void drawMenu()
 }
 
 void handleMenuSelect(String id) {
-  if (!showingAlbums) {
-    // Save current artist info for detail page
-    currentArtist.id = id;
-    currentArtist.name = menuItems[menuIndex].name;
-    Serial.print("Selected artist id: ");
-    Serial.print(id);
-    Serial.print(", name: ");
-    Serial.println(menuItems[menuIndex].name);
-    // Fetch albums and overwrite menuItems
-    bool ok = ApiService::fetchAlbums(menuItems, menuCount, id);
-    menuIndex = 0;
-    showingAlbums = true;
-    if (!ok) Serial.println("Failed to fetch albums!");
-  } else {
-  // Show album detail page
-  currentAlbum.id = menuItems[menuIndex].id;
-  currentAlbum.name = menuItems[menuIndex].name;
-  showingAlbumDetail = true;
-  Serial.print("Selected album id: ");
-  Serial.print(currentAlbum.id);
-  Serial.print(", name: ");
-  Serial.println(currentAlbum.name);
-  // POST to play endpoint
-  bool playOk = ApiService::postAlbumPlay(currentAlbum.id);
-  if (!playOk) Serial.println("Failed to POST play to album endpoint");
-  }
   MenuItem& selected = menuItems[menuIndex];
-  if (!showingAlbums) {
-    // If link starts with "player:", play media
-    if (selected.link.startsWith("player:")) {
-      // Show album detail and POST to play media
-      currentAlbum.id = selected.id;
-      currentAlbum.name = selected.name;
-      currentAlbum.link = selected.link;
-      showingAlbumDetail = true;
-      Serial.print("Selected album for playback: ");
-      Serial.print(currentAlbum.id);
-      Serial.print(", name: ");
-      Serial.println(currentAlbum.name);
-      // POST to play media endpoint
-      bool playOk = ApiService::postPlayMedia(currentAlbum.link);
-      if (!playOk) Serial.println("Failed to POST play to media endpoint");
-    } else {
-      // Otherwise, treat link as path to fetch albums
-      bool ok = ApiService::fetchAlbums(menuItems, menuCount, selected.link);
-      menuIndex = 0;
-      showingAlbums = true;
-      currentArtist.id = selected.id;
-      currentArtist.name = selected.name;
-      currentArtist.link = selected.link;
-      Serial.print("Selected artist id: ");
-      Serial.print(selected.id);
-      Serial.print(", name: ");
-      Serial.println(selected.name);
-      if (!ok) Serial.println("Failed to fetch albums!");
-    }
+  if (selected.link.startsWith("player:")) {
+    currentDetail = selected;
+    Serial.print("Selected for playback: ");
+    Serial.print(selected.id);
+    Serial.print(", name: ");
+    Serial.println(selected.name);
+    bool playOk = ApiService::postPlayMedia(selected.link);
+    if (!playOk) Serial.println("Failed to POST play to media endpoint");
   } else {
-    // Album menu: same logic as above
-    if (selected.link.startsWith("player:")) {
-      currentAlbum.id = selected.id;
-      currentAlbum.name = selected.name;
-      currentAlbum.link = selected.link;
-      showingAlbumDetail = true;
-      Serial.print("Selected album for playback: ");
-      Serial.print(currentAlbum.id);
-      Serial.print(", name: ");
-      Serial.println(currentAlbum.name);
-      bool playOk = ApiService::postPlayMedia(currentAlbum.link);
-      if (!playOk) Serial.println("Failed to POST play to media endpoint");
-    } else {
-      // If not player: just print info
-      Serial.print("Selected album id: ");
-      Serial.print(selected.id);
-      Serial.print(", name: ");
-      Serial.println(selected.name);
-    }
+    // Fetch next menu level using link
+    bool ok = ApiService::fetchMenuItems(menuItems, menuCount, selected.link);
+    menuIndex = 0;
+    currentBackLink = ApiService::backLink;
+    currentDetail = MenuItem();
+    Serial.print("Selected id: ");
+    Serial.print(selected.id);
+    Serial.print("Selected link: ");
+    Serial.print(selected.link);
+    Serial.print(", name: ");
+    Serial.println(selected.name);
+    if (!ok) Serial.println("Failed to fetch next menu!");
   }
 }
 
@@ -229,21 +168,20 @@ void setup()
 }
 
 void handleBack() {
-  if (showingAlbumDetail) {
-    // Go back to album list for current artist
-  bool ok = ApiService::fetchAlbums(menuItems, menuCount, currentArtist.id);
+  if (!currentBackLink.isEmpty()) {
+    bool ok = ApiService::fetchMenuItems(menuItems, menuCount, currentBackLink);
     menuIndex = 0;
-    showingAlbumDetail = false;
-    showingAlbums = true;
-    Serial.println("Back to album list");
-    if (!ok) Serial.println("Failed to fetch albums!");
+    currentBackLink = "";
+    currentDetail = MenuItem();
+    Serial.println("Back to previous menu");
+    if (!ok) Serial.println("Failed to fetch previous menu!");
     return;
   }
-  // Default: go back to artist menu
-  ApiService::fetchArtists(menuItems, menuCount);
+  // Default: reload root menu
+  ApiService::fetchMenuItems(menuItems, menuCount, "");
   menuIndex = 0;
-  showingAlbums = false;
-  Serial.println("Back to artist menu");
+  currentDetail = MenuItem();
+  Serial.println("Back to root menu");
 }
 
 void handleEncoder()
@@ -256,8 +194,8 @@ void handleEncoder()
   static int32_t acc = 0;
   acc += delta;
 
-  if (showingAlbumDetail) {
-    // On album detail page, use encoder for volume
+  if (!currentDetail.id.isEmpty()) {
+    // On detail page, use encoder for volume
     while (acc >= 2) {
       acc -= 2;
       bool ok = ApiService::postVolumeUp();
@@ -289,7 +227,7 @@ void loop()
 
   if (debouncedButtonPressed(PIN_ENC_SW)) {
     if (!lastDotState) {
-      if (!showingAlbumDetail) {
+      if (currentDetail.id.isEmpty()) {
         handleMenuSelect(menuItems[menuIndex].id);
       }
       lastDotState = true;
@@ -313,7 +251,7 @@ void loop()
       }
     }
   } else {
-    if (lastBackState && !longBackSent && (showingAlbums || showingAlbumDetail)) {
+    if (lastBackState && !longBackSent) {
       handleBack();
     }
     lastBackState = false;
