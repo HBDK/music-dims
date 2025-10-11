@@ -3,11 +3,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
-
-struct MenuItem {
-  int id;
-  String name;
-};
+#include "menu_item.h"
 
 class ApiService {
 public:
@@ -25,7 +21,7 @@ public:
         count = 0;
         for (JsonObject obj : arr) {
           if (count < 400) {
-            items[count].id = obj["id"].as<int>();
+            items[count].id = obj["id"].as<String>();
             items[count].name = obj["name"].as<String>();
             count++;
           }
@@ -43,8 +39,8 @@ public:
     return fetchMenuItems(items, count, url);
   }
 
-  static bool fetchAlbums(MenuItem* items, int& count, int artistId) {
-    String url = String(apiHost) + "/artists/" + String(artistId) + "/albums";
+  static bool fetchAlbums(MenuItem* items, int& count, String artistId) {
+    String url = String(apiHost) + "/artists/" + artistId + "/albums";
     return fetchMenuItems(items, count, url);
   }
 };

@@ -50,6 +50,7 @@ Adafruit_NeoPixel rgbBacklight(NUM_PIXELS, PIN_LCD_RGB, NEO_GRB + NEO_KHZ800);
 
 // -------------------- WiFi & API Integration --------------------
 // API service and MenuItem struct
+#include "menu_item.h"
 #include "api_service.h"
 
 // Secrets config
@@ -106,10 +107,10 @@ void drawMenu()
   u8g2.sendBuffer();
 }
 
-void handleMenuSelect(int id) {
+void handleMenuSelect(String id) {
   if (!showingAlbums) {
     // Fetch albums and overwrite menuItems
-  bool ok = ApiService::fetchAlbums(menuItems, menuCount, id);
+    bool ok = ApiService::fetchAlbums(menuItems, menuCount, id);
     menuIndex = 0;
     showingAlbums = true;
     // Save current artist info for detail page
@@ -216,7 +217,7 @@ void loop()
   if (debouncedButtonPressed(PIN_ENC_SW)) {
     if (!lastDotState) {
       if (!showingAlbumDetail) {
-        handleMenuSelect(menuItems[menuIndex].id);
+  handleMenuSelect(menuItems[menuIndex].id);
       }
       lastDotState = true;
     }
