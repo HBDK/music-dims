@@ -7,7 +7,17 @@
 
 class ApiService {
 public:
+  static bool postPlayPause() {
+    String url = String(apiHost) + "/players/" + String(playerName) + "/play-pause";
+    HTTPClient http;
+    http.begin(url.c_str());
+    int httpCode = http.POST(""); // Empty body
+    http.end();
+    return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
+  }
+
   static String backLink;
+
   static bool fetchMenuItems(MenuItem* items, int& count, const String& maybePath) {
     String path = maybePath.isEmpty() ? "/" : maybePath;
     String url = String(apiHost) + path;
@@ -46,6 +56,7 @@ public:
     http.end();
     return false;
   }
+
   static bool postPlayMedia(const String& link) {
     String url = String(apiHost) + "/players/" + String(playerName) + "/play";
     HTTPClient http;

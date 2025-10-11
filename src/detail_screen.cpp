@@ -26,6 +26,9 @@ ScreenAction DetailScreen::handleBackRelease(uint32_t pressLengthMs) {
 }
 
 ScreenAction DetailScreen::handleDotRelease(uint32_t pressLengthMs) {
+    Serial.println("POST to play/pause");
+    bool ok = ApiService::postPlayPause();
+    if (!ok) Serial.println("Failed to POST play/pause");
     return ScreenAction::None;
 }
 
