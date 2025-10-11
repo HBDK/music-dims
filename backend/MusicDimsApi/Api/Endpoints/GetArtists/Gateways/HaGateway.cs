@@ -12,7 +12,7 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
 
     public async Task<IEnumerable<NavigationEntityDto>> GetLibrary()
     {
-        var body = new GetLibraryPostBody("01JNY60SY4J2FG3YE9TCBA6GK0", "artist", true);
+        var body = new GetLibraryPostBody("01JNY60SY4J2FG3YE9TCBA6GK0", "artist", true, 500);
         var client = clientFactory.CreateClient(HomeAssistantClient.Name);
         var response = await client.PostAsync(GetLibraryRoute, new StringContent(JsonSerializer.Serialize(body), System.Text.Encoding.UTF8, "application/json"));
 
@@ -23,7 +23,7 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
     }
 }
 
-public record GetLibraryPostBody([property: JsonPropertyName("config_entry_id")]string ConfigEntry, [property: JsonPropertyName("media_type")]string MediaType, [property: JsonPropertyName("album_artists_only")] bool AlbumArtistOnly);
+public record GetLibraryPostBody([property: JsonPropertyName("config_entry_id")]string ConfigEntry, [property: JsonPropertyName("media_type")]string MediaType, [property: JsonPropertyName("album_artists_only")] bool AlbumArtistOnly, [property: JsonPropertyName("limit")] int Limit);
 public interface IHaGateway
 {
     Task<IEnumerable<NavigationEntityDto>> GetLibrary();
