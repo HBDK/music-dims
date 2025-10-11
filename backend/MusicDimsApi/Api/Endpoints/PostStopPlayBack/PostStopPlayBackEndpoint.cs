@@ -3,7 +3,7 @@ using MusicDimsApi.Endpoints.PostStopPlayBack.Gateways;
 
 namespace MusicDimsApi.Endpoints.PostStopPlayBack;
 
-public static class PostStopPlayBack
+public static class PostStopPlayBackEndpoint
 {
     public static WebApplicationBuilder AddPostStopPlayBackServices(this WebApplicationBuilder builder)
     {
