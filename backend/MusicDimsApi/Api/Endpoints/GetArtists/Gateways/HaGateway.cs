@@ -9,7 +9,7 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
 {
     private const string GetLibraryRoute = "/api/services/music_assistant/get_library?return_response=true";
 
-    public async Task<IEnumerable<ArtistResponseDto>> GetLibrary()
+    public async Task<IEnumerable<AlbumResponseDto>> GetLibrary()
     {
         var body = new GetLibraryPostBody("01JNY60SY4J2FG3YE9TCBA6GK0", "artist", true);
         var client = clientFactory.CreateClient(HomeAssistantClient.Name);
@@ -18,12 +18,12 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
         response.EnsureSuccessStatusCode();
 
         var rawResult = await response.Content.ReadFromJsonAsync<MusicAssistantGetLibraryResponse>();
-        return rawResult?.ServiceResponse.Items.Select(x => new ArtistResponseDto(x.Uri.Split("/").LastOrDefault() ?? "", x.Name)).Where(x => !string.IsNullOrWhiteSpace(x.Id)) ?? [];
+        return rawResult?.ServiceResponse.Items.Select(x => new AlbumResponseDto(x.Name.Replace(" ", "_"), x.Name)).Where(x => !string.IsNullOrWhiteSpace(x.Id)) ?? [];
     }
 }
 
 public record GetLibraryPostBody([property: JsonPropertyName("config_entry_id")]string ConfigEntry, [property: JsonPropertyName("media_type")]string MediaType, [property: JsonPropertyName("album_artists_only")] bool AlbumArtistOnly);
 public interface IHaGateway
 {
-    Task<IEnumerable<ArtistResponseDto>> GetLibrary();
+    Task<IEnumerable<AlbumResponseDto>> GetLibrary();
 }
