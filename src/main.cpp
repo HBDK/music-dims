@@ -217,10 +217,13 @@ void loop()
   // Button: select menu item
   static bool lastDotState = false;
   static bool lastBackState = false;
+  static uint32_t backPressStart = 0;
+  static bool longBackSent = false;
+
   if (debouncedButtonPressed(PIN_ENC_SW)) {
     if (!lastDotState) {
       if (!showingAlbumDetail) {
-  handleMenuSelect(menuItems[menuIndex].id);
+        handleMenuSelect(menuItems[menuIndex].id);
       }
       lastDotState = true;
     }
@@ -228,14 +231,27 @@ void loop()
     lastDotState = false;
   }
 
-  // Back button: go back to previous menu
-  if (debouncedButtonPressed(PIN_BACK_BTN)) {
-    if (!lastBackState && (showingAlbums || showingAlbumDetail)) {
-      handleBack();
+  // Back button: short and long press
+  if (digitalRead(PIN_BACK_BTN) == LOW) {
+    if (!lastBackState) {
+      backPressStart = millis();
+      longBackSent = false;
       lastBackState = true;
+    } else {
+      // If held for >1s, send stop
+      if (!longBackSent && millis() - backPressStart > 1000) {
+        bool stopOk = ApiService::postPlayerStop();
+        if (!stopOk) Serial.println("Failed to POST stop to player endpoint");
+        longBackSent = true;
+      }
     }
   } else {
+    if (lastBackState && !longBackSent && (showingAlbums || showingAlbumDetail)) {
+      handleBack();
+    }
     lastBackState = false;
+    backPressStart = 0;
+    longBackSent = false;
   }
 
   drawMenu();

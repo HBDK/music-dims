@@ -52,4 +52,13 @@ public:
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
   }
+
+  static bool postPlayerStop() {
+    String url = String(apiHost) + "/players/1/stop";
+    HTTPClient http;
+    http.begin(url.c_str());
+    int httpCode = http.POST(""); // Empty body
+    http.end();
+    return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
+  }
 };
