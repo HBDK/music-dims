@@ -45,10 +45,12 @@ public:
   }
 
   static bool postAlbumPlay(const String& albumId) {
-    String url = String(apiHost) + "/albums/" + albumId + "/play";
+    String url = String(apiHost) + "/players/" + String(playerName) + "/play-album";
     HTTPClient http;
     http.begin(url.c_str());
-    int httpCode = http.POST(""); // Empty body
+    http.addHeader("Content-Type", "application/json");
+    String body = String("{\"album_id\":\"") + albumId + "\"}";
+    int httpCode = http.POST(body);
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
   }
