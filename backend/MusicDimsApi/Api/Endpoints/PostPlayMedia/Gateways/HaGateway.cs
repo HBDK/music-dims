@@ -10,7 +10,7 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
 
     public async Task PlayMedia(string playerId, string mediaId, string mediaType)
     {
-        var body = new PostPlayMediaBody($"media_player.{playerId}", "album", mediaId);
+        var body = new PostPlayMediaBody($"media_player.{playerId}", mediaType, mediaId, "replace");
         var client = clientFactory.CreateClient(HomeAssistantClient.Name);
         var response = await client.PostAsync(PostPlayMediaPath, new StringContent(JsonSerializer.Serialize(body), System.Text.Encoding.UTF8, "application/json"));
 
@@ -19,7 +19,7 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
     }
 }
 
-public record PostPlayMediaBody([property: JsonPropertyName("entity_id")]string EntityId, [property: JsonPropertyName("media_type")]string MediaType, [property: JsonPropertyName("media_id")] string MediaId);
+public record PostPlayMediaBody([property: JsonPropertyName("entity_id")]string EntityId, [property: JsonPropertyName("media_type")]string MediaType, [property: JsonPropertyName("media_id")] string MediaId, [property: JsonPropertyName("enqueue")] string Enqueue);
 public interface IHaGateway
 {
     Task PlayMedia(string playerId, string mediaId, string mediaType);

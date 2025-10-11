@@ -1,6 +1,7 @@
 using MusicDimsApi.Clients;
 using MusicDimsApi.Endpoints.GetArtistAlbums;
 using MusicDimsApi.Endpoints.GetArtists;
+using MusicDimsApi.Endpoints.GetRadioChannels;
 using MusicDimsApi.Endpoints.GetRoot;
 using MusicDimsApi.Endpoints.PostPlayAlbum;
 using MusicDimsApi.Endpoints.PostPlayMedia;
@@ -15,6 +16,7 @@ builder.Configuration.AddJsonFile("appsettings.secrets.json");
 builder.AddHomeAssistantClient();
 builder.AddGetArtistsEndpointServices();
 builder.AddGetArtistAlbumsEndpointServices();
+builder.AddGetRadioChannelsEndpointServices();
 builder.AddPostPlayAlbumServices();
 builder.AddPostStopPlayBackServices();
 builder.AddPostVolumeUpServices();
@@ -28,6 +30,7 @@ var app = builder.Build();
 
 app.MapGetArtistsEndpoint();
 app.MapGetArtistAlbumsEndpoint();
+app.MapGetRadioChannelsEndpoint();
 app.MapPostPlayAlbumEndpoint();
 app.MapPostStopPlayBackEndpoint();
 app.MapPostVolumeUpEndpoint();

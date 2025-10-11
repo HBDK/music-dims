@@ -10,7 +10,7 @@ public static class GetArtistsEndpoint
     {
         app.MapGet("/", () =>
         {
-            var result = new NavigationResponseDto([new NavigationEntityDto("", "Artists", "/artists")], "/");
+            var result = new NavigationResponseDto([new NavigationEntityDto("", "Artists", "/artists"), new NavigationEntityDto("", "Radio", "/radio-channels")], "/");
             return result;
         }).WithName("get-root");
  
