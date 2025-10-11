@@ -1,6 +1,7 @@
 using MusicDimsApi.Clients;
 using MusicDimsApi.Endpoints.GetArtistAlbums;
 using MusicDimsApi.Endpoints.GetArtists;
+using MusicDimsApi.Endpoints.GetRoot;
 using MusicDimsApi.Endpoints.PostPlayAlbum;
 using MusicDimsApi.Endpoints.PostPlayMedia;
 using MusicDimsApi.Endpoints.PostStopPlayBack;
@@ -30,6 +31,7 @@ app.MapPostStopPlayBackEndpoint();
 app.MapPostVolumeUpEndpoint();
 app.MapPostVolumeDownEndpoint();
 app.MapPostPlayMediaEndpoint();
+app.MapGetRootEndpoint();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.Run();

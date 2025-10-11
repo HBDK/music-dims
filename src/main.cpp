@@ -164,24 +164,17 @@ void setup()
   u8g2.sendBuffer();
   delay(500);
 
-  ApiService::fetchArtists(menuItems, menuCount);
+  ApiService::fetchMenuItems(menuItems, menuCount, "/");
 }
 
 void handleBack() {
-  if (!currentBackLink.isEmpty()) {
-    bool ok = ApiService::fetchMenuItems(menuItems, menuCount, currentBackLink);
-    menuIndex = 0;
-    currentBackLink = "";
-    currentDetail = MenuItem();
-    Serial.println("Back to previous menu");
-    if (!ok) Serial.println("Failed to fetch previous menu!");
-    return;
-  }
-  // Default: reload root menu
-  ApiService::fetchMenuItems(menuItems, menuCount, "");
+  bool ok = ApiService::fetchMenuItems(menuItems, menuCount, currentBackLink);
   menuIndex = 0;
+  currentBackLink = "";
   currentDetail = MenuItem();
-  Serial.println("Back to root menu");
+  Serial.println("Back to previous menu");
+  if (!ok) Serial.println("Failed to fetch previous menu!");
+  return;
 }
 
 void handleEncoder()

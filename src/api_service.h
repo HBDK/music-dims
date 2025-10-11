@@ -8,7 +8,8 @@
 class ApiService {
 public:
   static String backLink;
-  static bool fetchMenuItems(MenuItem* items, int& count, const String& path) {
+  static bool fetchMenuItems(MenuItem* items, int& count, const String& maybePath) {
+    String path = maybePath.isEmpty() ? "/" : maybePath;
     String url = String(apiHost) + path;
     if (WiFi.status() != WL_CONNECTED) return false;
     HTTPClient http;
@@ -54,10 +55,6 @@ public:
     int httpCode = http.POST(body);
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
-  }
-
-  static bool fetchArtists(MenuItem* items, int& count) {
-    return fetchMenuItems(items, count, "/artists");
   }
 
   static bool postAlbumPlay(const String& albumId) {

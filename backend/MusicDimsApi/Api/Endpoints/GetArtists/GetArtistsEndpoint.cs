@@ -21,7 +21,7 @@ public static class GetArtistsEndpoint
         app.MapGet("/artists", async ([FromServices] IHaGateway haGateway) =>
         {
             var values = await haGateway.GetLibrary();
-            var result = new NavigationResponseDto(values.ToArray(), "");
+            var result = new NavigationResponseDto(values.ToArray(), "/");
             return result;
         }).WithName("get-artists");
  
