@@ -31,18 +31,6 @@ U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(
 #include <ESP32Encoder.h>
 ESP32Encoder encoder;
 
-bool debouncedButtonPressed(uint8_t pin) {
-  static uint32_t tLast[32] = {0}; // Support up to 32 pins
-  static bool last[32] = {HIGH};
-  bool now = digitalRead(pin);
-  if (now != last[pin]) {
-    last[pin] = now;
-    tLast[pin] = millis();
-  }
-  if (millis() - tLast[pin] > 20 && now == LOW) return true;
-  return false;
-}
-
 #include <Adafruit_NeoPixel.h>
 
 constexpr uint8_t PIN_LCD_RGB = 21; // Change to your actual NeoPixel data pin
@@ -68,10 +56,7 @@ IScreen* currentScreen = nullptr;
 MenuScreen* menuScreen = nullptr;
 DetailScreen* detailScreen = nullptr;
 
-
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
-
-
 
 void setup()
 {
