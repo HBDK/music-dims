@@ -58,6 +58,14 @@ void MenuScreen::drawError() {
     tft.drawCentreString("Check API & WiFi", 160, 100, 2);
 }
 
+// Helper: Truncate long names for menu display
+String fitMenuName(const String& name, int maxChars) {
+    if (name.length() > maxChars) {
+        return name.substring(0, maxChars - 3) + "...";
+    }
+    return name;
+}
+
 void MenuScreen::drawCall() {
     // Only redraw if menuIndex or menuCount changed
     if (menuIndex != lastMenuIndex || menuCount != lastMenuCount) {
@@ -74,6 +82,7 @@ void MenuScreen::drawCall() {
             for (int i = 0; i < 5 && (scrollStart + i) < menuCount; ++i) {
                 int y = 40 + i * 40;
                 int itemIdx = scrollStart + i;
+                String displayName = fitMenuName(menuItems[itemIdx].name, 22); // 22 chars max
                 if (itemIdx == menuIndex) {
                     tft.fillRect(0, y - 8, 320, 32, TFT_BLUE);
                     tft.setTextColor(TFT_WHITE, TFT_BLUE);
@@ -81,7 +90,7 @@ void MenuScreen::drawCall() {
                     tft.setTextColor(TFT_WHITE, TFT_BLACK);
                 }
                 tft.setCursor(10, y);
-                tft.print(menuItems[itemIdx].name.c_str());
+                tft.print(displayName.c_str());
             }
         }
         lastMenuIndex = menuIndex;
