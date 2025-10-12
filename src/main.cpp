@@ -7,23 +7,6 @@
 #include "input_service.h"
 #include "light_service.h"
 
-// -------------------- Pin Map (change if you rewired) --------------------
-constexpr uint8_t PIN_LCD_SCK  = 18; // ESP32 VSPI SCK
-constexpr uint8_t PIN_LCD_MOSI = 23; // ESP32 VSPI MOSI
-constexpr uint8_t PIN_LCD_CS   = 5;
-constexpr uint8_t PIN_LCD_DC   = 4;  // A0
-constexpr uint8_t PIN_LCD_RST  = 2;
-// -------------------- Display: ST7567 (BTT Mini12864 v2.0) --------------------
-// Try this first (JLX glass is common). If nothing shows, try the SH1107-style
-// or a different ST7567 constructor from U8g2’s list.
-// U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(
-//   U8G2_R2,
-//   /* cs=*/ PIN_LCD_CS,
-//   /* dc=*/ PIN_LCD_DC,
-//   /* reset=*/ PIN_LCD_RST
-// );
-// Note: HW_SPI uses the board’s default MOSI/SCK (we wired to VSPI defaults).
-
 // -------------------- WiFi & API Integration --------------------
 // API service and MenuItem struct
 #include "menu_item.h"
@@ -59,7 +42,7 @@ void setup()
 
   // Display
   tft.init();
-  tft.setRotation(1); // Landscape
+  tft.setRotation(3); // Landscape
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.setTextSize(2);
