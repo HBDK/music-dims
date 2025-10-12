@@ -5,7 +5,7 @@
 #include "player_utils.h"
 
 MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, TFT_eSPI& display)
-    : menuItems(items), menuCount(count), menuIndex(index), tft(display) {}
+    : menuItems(items), menuCount(count), menuIndex(index), tft(display), lastMenuIndex(-1), lastMenuCount(-1) {}
 
 void MenuScreen::handleEncoderInc() {
     menuIndex++;
@@ -59,27 +59,38 @@ void MenuScreen::drawError() {
 }
 
 void MenuScreen::drawCall() {
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setTextSize(2);
-    if (menuCount == 0) {
-        drawError();
-    } else {
-        int scrollStart = menuIndex - 2;
-        if (scrollStart < 0) scrollStart = 0;
-        if (scrollStart > menuCount - 5) scrollStart = menuCount - 5;
-        if (scrollStart < 0) scrollStart = 0;
-        for (int i = 0; i < 5 && (scrollStart + i) < menuCount; ++i) {
-            int y = 40 + i * 40;
-            int itemIdx = scrollStart + i;
-            if (itemIdx == menuIndex) {
-                tft.fillRect(0, y - 8, 320, 32, TFT_BLUE);
-                tft.setTextColor(TFT_WHITE, TFT_BLUE);
-            } else {
-                tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    // Only redraw if menuIndex or menuCount changed
+    if (menuIndex != lastMenuIndex || menuCount != lastMenuCount) {
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.setTextSize(2);
+        if (menuCount == 0) {
+            drawError();
+        } else {
+            int scrollStart = menuIndex - 2;
+            if (scrollStart < 0) scrollStart = 0;
+            if (scrollStart > menuCount - 5) scrollStart = menuCount - 5;
+            if (scrollStart < 0) scrollStart = 0;
+            for (int i = 0; i < 5 && (scrollStart + i) < menuCount; ++i) {
+                int y = 40 + i * 40;
+                int itemIdx = scrollStart + i;
+                if (itemIdx == menuIndex) {
+                    tft.fillRect(0, y - 8, 320, 32, TFT_BLUE);
+                    tft.setTextColor(TFT_WHITE, TFT_BLUE);
+                } else {
+                    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+                }
+                tft.setCursor(10, y);
+                tft.print(menuItems[itemIdx].name.c_str());
             }
-            tft.setCursor(10, y);
-            tft.print(menuItems[itemIdx].name.c_str());
         }
+        lastMenuIndex = menuIndex;
+        lastMenuCount = menuCount;
     }
+}
+
+void MenuScreen::forceRedraw() {
+    lastMenuIndex = -1;
+    lastMenuCount = -1;
+    drawCall();
 }

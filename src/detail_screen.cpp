@@ -33,8 +33,17 @@ ScreenAction DetailScreen::handleDotRelease(uint32_t pressLengthMs) {
 }
 
 void DetailScreen::drawCall() {
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.setTextSize(3);
-    tft.drawCentreString(currentDetail.name.c_str(), 160, 100, 3);
+    // Only redraw if name changed
+    if (currentDetail.name != lastName) {
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+        tft.setTextSize(3);
+        tft.drawCentreString(currentDetail.name.c_str(), 160, 100, 3);
+        lastName = currentDetail.name;
+    }
+}
+
+void DetailScreen::forceRedraw() {
+    lastName = "";
+    drawCall();
 }

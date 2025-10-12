@@ -92,9 +92,11 @@ void loop()
     detailScreen = new DetailScreen(menuItems[menuIndex], tft);
     currentScreen = detailScreen;
     inputService->currentScreen = currentScreen;
+    detailScreen->forceRedraw();
   } else if (action == ScreenAction::SwitchToMenu) {
     currentScreen = menuScreen;
     inputService->currentScreen = currentScreen;
+    menuScreen->forceRedraw();
   }
 
   currentScreen->drawCall();

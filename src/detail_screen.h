@@ -12,7 +12,9 @@ public:
     ScreenAction handleBackRelease(uint32_t pressLengthMs) override;
     ScreenAction handleDotRelease(uint32_t pressLengthMs) override;
     void drawCall() override;
+    void forceRedraw();
 private:
     MenuItem& currentDetail;
     TFT_eSPI& tft;
+    String lastName = "";
 };

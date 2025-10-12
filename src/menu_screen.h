@@ -12,11 +12,14 @@ public:
     ScreenAction handleBackRelease(uint32_t pressLengthMs) override;
     ScreenAction handleDotRelease(uint32_t pressLengthMs) override;
     void drawCall() override;
-
+    // Flicker reduction
+    void forceRedraw();
 private:
     MenuItem* menuItems;
     int& menuCount;
     int& menuIndex;
     TFT_eSPI& tft;
     void drawError();
+    int lastMenuIndex = -1;
+    int lastMenuCount = -1;
 };
