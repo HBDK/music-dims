@@ -5,10 +5,10 @@
 
 class InputService {
 public:
-    static constexpr uint8_t PIN_ENC_A    = 32;
-    static constexpr uint8_t PIN_ENC_B    = 33;
-    static constexpr uint8_t PIN_ENC_SW   = 25;
-    static constexpr uint8_t PIN_BACK_BTN = 27;
+    static constexpr uint8_t PIN_ENC_A    = 27;
+    static constexpr uint8_t PIN_ENC_B    = 22;
+    static constexpr uint8_t PIN_ENC_SW   = 1;
+    static constexpr uint8_t PIN_BACK_BTN = 3;
 
     InputService(IScreen *screen, LightService *light);
     void begin();
