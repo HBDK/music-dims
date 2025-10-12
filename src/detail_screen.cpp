@@ -4,8 +4,8 @@
 #include <Arduino.h>
 #include "player_utils.h"
 
-DetailScreen::DetailScreen(MenuItem& detail, U8G2& display)
-    : currentDetail(detail), u8g2(display) {}
+DetailScreen::DetailScreen(MenuItem& detail, TFT_eSPI& display)
+    : currentDetail(detail), tft(display) {}
 
 void DetailScreen::handleEncoderInc() {
     bool ok = ApiService::postVolumeUp();
@@ -33,8 +33,8 @@ ScreenAction DetailScreen::handleDotRelease(uint32_t pressLengthMs) {
 }
 
 void DetailScreen::drawCall() {
-    u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tf);
-    u8g2.drawStr(0, 16, currentDetail.name.c_str());
-    u8g2.sendBuffer();
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.setTextSize(3);
+    tft.drawCentreString(currentDetail.name.c_str(), 160, 100, 3);
 }

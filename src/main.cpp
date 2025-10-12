@@ -3,7 +3,7 @@
 #include "detail_screen.h"
 #include "screen_action.h"
 #include <Arduino.h>
-#include <U8g2lib.h>
+#include <TFT_eSPI.h>
 #include "input_service.h"
 #include "light_service.h"
 
@@ -16,12 +16,12 @@ constexpr uint8_t PIN_LCD_RST  = 2;
 // -------------------- Display: ST7567 (BTT Mini12864 v2.0) --------------------
 // Try this first (JLX glass is common). If nothing shows, try the SH1107-style
 // or a different ST7567 constructor from U8g2’s list.
-U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(
-  U8G2_R2,
-  /* cs=*/ PIN_LCD_CS,
-  /* dc=*/ PIN_LCD_DC,
-  /* reset=*/ PIN_LCD_RST
-);
+// U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(
+//   U8G2_R2,
+//   /* cs=*/ PIN_LCD_CS,
+//   /* dc=*/ PIN_LCD_DC,
+//   /* reset=*/ PIN_LCD_RST
+// );
 // Note: HW_SPI uses the board’s default MOSI/SCK (we wired to VSPI defaults).
 
 // -------------------- WiFi & API Integration --------------------
@@ -47,6 +47,8 @@ LightService* lightService = nullptr;
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
 
+TFT_eSPI tft = TFT_eSPI();
+
 void setup()
 {
   Serial.begin(115200);
@@ -55,28 +57,26 @@ void setup()
   lightService = new LightService();
   lightService->begin();
 
+  // Display
+  tft.init();
+  tft.setRotation(1); // Landscape
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextSize(2);
+  tft.drawCentreString("Connecting WiFi...", 160, 30, 2);
+
   // InputService setup
-  menuScreen = new MenuScreen(menuItems, menuCount, menuIndex, u8g2);
+  menuScreen = new MenuScreen(menuItems, menuCount, menuIndex, tft);
   currentScreen = menuScreen;
   inputService = new InputService(currentScreen, lightService);
   inputService->begin();
-
-  // Display
-  u8g2.begin();
-  u8g2.setContrast(180);
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x10_tf);
-  u8g2.drawStr(0, 12, "Connecting WiFi...");
-  u8g2.sendBuffer();
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x10_tf);
-  u8g2.drawStr(0, 12, "WiFi connected!");
-  u8g2.sendBuffer();
+  tft.fillScreen(TFT_BLACK);
+  tft.drawCentreString("WiFi connected!", 160, 30, 2);
   delay(500);
 
   ApiService::fetchMenuItems(menuItems, menuCount, "/");
@@ -89,7 +89,7 @@ void loop()
 
   if (action == ScreenAction::SwitchToDetail) {
     delete detailScreen;
-    detailScreen = new DetailScreen(menuItems[menuIndex], u8g2);
+    detailScreen = new DetailScreen(menuItems[menuIndex], tft);
     currentScreen = detailScreen;
     inputService->currentScreen = currentScreen;
   } else if (action == ScreenAction::SwitchToMenu) {

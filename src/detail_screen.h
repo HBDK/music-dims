@@ -1,13 +1,12 @@
-
 #pragma once
 #include "screen_interface.h"
 #include "screen_action.h"
 #include "menu_item.h"
-#include <U8g2lib.h>
+#include <TFT_eSPI.h>
 
 class DetailScreen : public IScreen {
 public:
-    DetailScreen(MenuItem& detail, U8G2& display);
+    DetailScreen(MenuItem& detail, TFT_eSPI& display);
     void handleEncoderInc() override;
     void handleEncoderDec() override;
     ScreenAction handleBackRelease(uint32_t pressLengthMs) override;
@@ -15,5 +14,5 @@ public:
     void drawCall() override;
 private:
     MenuItem& currentDetail;
-    U8G2& u8g2;
+    TFT_eSPI& tft;
 };

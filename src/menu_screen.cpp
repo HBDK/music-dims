@@ -1,12 +1,11 @@
-
 #include "menu_screen.h"
 #include "screen_action.h"
 #include "api_service.h"
 #include <Arduino.h>
 #include "player_utils.h"
 
-MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, U8G2& display)
-    : menuItems(items), menuCount(count), menuIndex(index), u8g2(display) {}
+MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, TFT_eSPI& display)
+    : menuItems(items), menuCount(count), menuIndex(index), tft(display) {}
 
 void MenuScreen::handleEncoderInc() {
     menuIndex++;
@@ -52,16 +51,17 @@ ScreenAction MenuScreen::handleDotRelease(uint32_t pressLengthMs) {
 }
 
 void MenuScreen::drawError() {
-    u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tf);
-    u8g2.drawStr(0, 24, "No items found!");
-    u8g2.drawStr(0, 40, "Check API & WiFi");
-    u8g2.sendBuffer();
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.setTextSize(2);
+    tft.drawCentreString("No items found!", 160, 60, 2);
+    tft.drawCentreString("Check API & WiFi", 160, 100, 2);
 }
 
 void MenuScreen::drawCall() {
-    u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tf);
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextSize(2);
     if (menuCount == 0) {
         drawError();
     } else {
@@ -70,17 +70,16 @@ void MenuScreen::drawCall() {
         if (scrollStart > menuCount - 5) scrollStart = menuCount - 5;
         if (scrollStart < 0) scrollStart = 0;
         for (int i = 0; i < 5 && (scrollStart + i) < menuCount; ++i) {
-            int y = 14 + i * 12;
+            int y = 40 + i * 40;
             int itemIdx = scrollStart + i;
             if (itemIdx == menuIndex) {
-                u8g2.drawBox(0, y - 9, 128, 11);
-                u8g2.setDrawColor(0);
-                u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
-                u8g2.setDrawColor(1);
+                tft.fillRect(0, y - 8, 320, 32, TFT_BLUE);
+                tft.setTextColor(TFT_WHITE, TFT_BLUE);
             } else {
-                u8g2.drawStr(4, y, menuItems[itemIdx].name.c_str());
+                tft.setTextColor(TFT_WHITE, TFT_BLACK);
             }
+            tft.setCursor(10, y);
+            tft.print(menuItems[itemIdx].name.c_str());
         }
     }
-    u8g2.sendBuffer();
 }
