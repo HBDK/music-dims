@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  music-dims-api:
+    build:
+      context: ./backend/MusicDimsApi
+      dockerfile: Api/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:5000
+    volumes:
+      - ./backend/MusicDimsApi/Api/appsettings.secrets.json:/app/appsettings.secrets.json:ro
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=private_proxy"
+      - "traefik.http.routers.dims.rule=Host(`dims.snp.hbho.me`)"
+      - "traefik.http.routers.dims.entrypoints=websecure"
+      - "traefik.http.services.dims.loadbalancer.server.port=5000"
+      - "traefik.http.routers.dims.tls.certresolver=myresolver"
+    networks:
+      - proxy
+networks:
+  proxy:
+    external: true
+    name: private_proxy
+

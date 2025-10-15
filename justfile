@@ -8,12 +8,12 @@ pull:
   ./update-git-commit.sh
 
 decrypt:
-  sops decrypt --input-type json --output-type json src/WeedProxy/secrets.json.enc > src/WeedProxy/appsettings.secrets.json
+  sops decrypt --input-type json --output-type json ./backend/MusicDimsApi/Api/secrets.json.enc > ./backend/MusicDimsApi/Api/appsettings.secrets.json
+
+encrypt:
+  sops --encrypt ./backend/MusicDimsApi/Api/appsettings.secrets.json > ./backend/MusicDimsApi/Api/secrets.json.enc
 
 build-and-deploy:
   docker compose up -d --build
-
-follow-logs:
-  docker logs weedproxy-weedproxy-1 -f
 
 deploy: pull decrypt build-and-deploy
