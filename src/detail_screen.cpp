@@ -10,11 +10,13 @@ DetailScreen::DetailScreen(MenuItem& detail, TFT_eSPI& display)
 void DetailScreen::handleEncoderInc() {
     bool ok = ApiService::postVolumeUp();
     if (!ok) Serial.println("Failed to POST volume up");
+    lastPoll = 4000;
 }
 
 void DetailScreen::handleEncoderDec() {
     bool ok = ApiService::postVolumeDown();
     if (!ok) Serial.println("Failed to POST volume down");
+    lastPoll = 4000;
 }
 
 ScreenAction DetailScreen::handleBackRelease(uint32_t pressLengthMs) {
