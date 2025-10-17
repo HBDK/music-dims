@@ -25,7 +25,6 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
                 System.Text.Encoding.UTF8,
                 "application/json"));
 
-        var test = await response.Content.ReadAsStringAsync();
         response.EnsureSuccessStatusCode();
     }
 }

@@ -82,6 +82,12 @@ void loop()
     menuScreen->forceRedraw();
   }
 
+  unsigned long now = millis();
+  // If on detail screen, allow it to poll state periodically
+  if (currentScreen == detailScreen && detailScreen != nullptr) {
+    detailScreen->pollIfNeeded(now);
+  }
+
   currentScreen->drawCall();
   delay(10);
 }

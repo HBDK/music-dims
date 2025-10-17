@@ -17,10 +17,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ArtistResponseDto"
-                  }
+                  "$ref": "#/components/schemas/NavigationResponseDto"
                 }
               }
             }
@@ -50,10 +47,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AlbumResponseDto"
-                  }
+                  "$ref": "#/components/schemas/NavigationResponseDto"
                 }
               }
             }
@@ -61,35 +55,22 @@
         }
       }
     },
-    "/players/{id}/play-album": {
-      "post": {
+    "/radio-channels": {
+      "get": {
         "tags": [
           "Api"
         ],
-        "operationId": "post-play-album",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PostPlayAlbumRequestDto"
-              }
-            }
-          },
-          "required": true
-        },
+        "operationId": "get-radio-channels",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NavigationResponseDto"
+                }
+              }
+            }
           }
         }
       }
@@ -163,6 +144,29 @@
         }
       }
     },
+    "/players/{id}/play-pause": {
+      "post": {
+        "tags": [
+          "Api"
+        ],
+        "operationId": "post-play-pause",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/players/{id}/play": {
       "post": {
         "tags": [
@@ -195,11 +199,94 @@
           }
         }
       }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "operationId": "get-root",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NavigationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{id}": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "operationId": "get-player-state",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPlayerStateResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
-      "AlbumResponseDto": {
+      "GetPlayerStateResponseDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
+          "volume": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "muted": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "artist": {
+            "type": "string",
+            "nullable": true
+          },
+          "album": {
+            "type": "string",
+            "nullable": true
+          },
+          "picture-url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "NavigationEntityDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -217,28 +304,17 @@
         },
         "additionalProperties": false
       },
-      "ArtistResponseDto": {
+      "NavigationResponseDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NavigationEntityDto"
+            },
             "nullable": true
           },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "link": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "PostPlayAlbumRequestDto": {
-        "type": "object",
-        "properties": {
-          "album_id": {
+          "back_link": {
             "type": "string",
             "nullable": true
           }

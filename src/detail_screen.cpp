@@ -33,17 +33,34 @@ ScreenAction DetailScreen::handleDotRelease(uint32_t pressLengthMs) {
 }
 
 void DetailScreen::drawCall() {
-    // Only redraw if name changed
-    if (currentDetail.name != lastName) {
+    // Draw detail view: title, artist, album - only redraw when content changes
+    String title = cachedState.title;
+    String artist = cachedState.artist;
+    String album = cachedState.album.length() ? cachedState.album : currentDetail.name;
+
+    if (title != lastName) {
         tft.fillScreen(TFT_BLACK);
         tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-        // Use display center so rotation / resolution doesn't place text off-screen
+        // smaller title font
+        const int titleFont = 1;
+        const int subFont = 1;
         int cx = tft.width() / 2;
-        int cy = tft.height() / 2;
-        // Use a medium built-in font for clear rendering
-        const int fontNum = 2;
-        tft.drawCentreString(currentDetail.name.c_str(), cx, cy - 10, fontNum);
-        lastName = currentDetail.name;
+        int y = tft.height() / 2 - 16;
+        tft.drawCentreString(title.c_str(), cx, y, titleFont);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        // tighter spacing for artist/album
+        tft.drawCentreString(artist.c_str(), cx, y + 22, subFont);
+        tft.drawCentreString(album.c_str(), cx, y + 44, subFont);
+
+        // Draw volume / muted state in top-right
+        String volStr = cachedState.muted ? String("MUTE") : String("Vol:") + String(cachedState.volume);
+        int volFont = 1;
+        int volW = tft.textWidth(volStr);
+        int volX = tft.width() - 10 - volW;
+        tft.setTextColor(TFT_CYAN, TFT_BLACK);
+        tft.drawString(volStr.c_str(), volX, 8, volFont);
+
+        lastName = title;
     }
 }
 
@@ -51,3 +68,27 @@ void DetailScreen::forceRedraw() {
     lastName = "";
     drawCall();
 }
+
+void DetailScreen::pollIfNeeded(unsigned long nowMillis) {
+    if (nowMillis - lastPoll < pollIntervalMs) return;
+    lastPoll = nowMillis;
+
+    ApiService::PlayerState st;
+    bool ok = ApiService::getPlayerState(st);
+    if (!ok) return; // keep previous cachedState
+
+    // Update cached state and force redraw when title/artist/album/state/volume/muted changed
+    bool changed = false;
+    if (st.title != cachedState.title) changed = true;
+    if (st.artist != cachedState.artist) changed = true;
+    if (st.album != cachedState.album) changed = true;
+    if (st.state != cachedState.state) changed = true;
+    if (st.volume != cachedState.volume) changed = true;
+    if (st.muted != cachedState.muted) changed = true;
+
+    cachedState = st;
+    if (changed) {
+        forceRedraw();
+    }
+}
+

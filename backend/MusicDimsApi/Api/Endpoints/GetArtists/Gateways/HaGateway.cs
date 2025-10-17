@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MusicDimsApi.Clients;
@@ -19,7 +20,7 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
         response.EnsureSuccessStatusCode();
 
         var rawResult = await response.Content.ReadFromJsonAsync<MusicAssistantGetLibraryResponse>();
-        return rawResult?.ServiceResponse.Items.Select(x => new NavigationEntityDto(x.Name.Replace(" ", "_"), x.Name, $"/artists/{x.Name.Replace(" ", "_")}/albums")).Where(x => !string.IsNullOrWhiteSpace(x.Id)) ?? [];
+        return rawResult?.ServiceResponse.Items.Select(x => new NavigationEntityDto(x.Name.Replace(" ", "_"), x.Name, $"/artists/{WebUtility.UrlEncode(x.Name.Replace(" ", "_")) }/albums")).Where(x => !string.IsNullOrWhiteSpace(x.Id)) ?? [];
     }
 }
 

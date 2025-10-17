@@ -14,7 +14,6 @@ public class HaGateway(IHttpClientFactory clientFactory, ILogger<HaGateway> logg
         var client = clientFactory.CreateClient(HomeAssistantClient.Name);
         var response = await client.PostAsync(PlayPauseRoute, new StringContent(JsonSerializer.Serialize(body), System.Text.Encoding.UTF8, "application/json"));
 
-        var test = await response.Content.ReadAsStringAsync();
         response.EnsureSuccessStatusCode();
     }
 }

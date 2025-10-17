@@ -1,6 +1,7 @@
 using MusicDimsApi.Clients;
 using MusicDimsApi.Endpoints.GetArtistAlbums;
 using MusicDimsApi.Endpoints.GetArtists;
+using MusicDimsApi.Endpoints.GetPlayer;
 using MusicDimsApi.Endpoints.GetRadioChannels;
 using MusicDimsApi.Endpoints.GetRoot;
 using MusicDimsApi.Endpoints.PostPlayMedia;
@@ -21,6 +22,7 @@ builder.AddPostVolumeUpServices();
 builder.AddPostVolumeDownServices();
 builder.AddPostPlayPauseServices();
 builder.AddPostPlayMediaServices();
+builder.AddGetPlayerEndpoint();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -35,6 +37,7 @@ app.MapPostVolumeDownEndpoint();
 app.MapPostPlayPauseEndpoint();
 app.MapPostPlayMediaEndpoint();
 app.MapGetRootEndpoint();
+app.MapGetPlayerEndpoint();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.Run();
