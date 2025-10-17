@@ -40,7 +40,7 @@ void DetailScreen::drawCall() {
     String artist = cachedState.artist;
     String album = cachedState.album.length() ? cachedState.album : currentDetail.name;
 
-    if (title != lastName) {
+    if (title != lastTitle) {
         tft.fillScreen(TFT_BLACK);
         tft.setTextColor(TFT_YELLOW, TFT_BLACK);
         // smaller title font
@@ -62,12 +62,12 @@ void DetailScreen::drawCall() {
         tft.setTextColor(TFT_CYAN, TFT_BLACK);
         tft.drawString(volStr.c_str(), volX, 8, volFont);
 
-        lastName = title;
+        lastTitle = title;
     }
 }
 
 void DetailScreen::forceRedraw() {
-    lastName = "";
+    lastTitle = "None";
     drawCall();
 }
 

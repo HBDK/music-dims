@@ -18,7 +18,7 @@ public:
 private:
     MenuItem& currentDetail;
     TFT_eSPI& tft;
-    String lastName = "";
+    String lastTitle = "None";
     unsigned long lastPoll = 5000;
     unsigned long pollIntervalMs = 5000; // default 5s
     ApiService::PlayerState cachedState;

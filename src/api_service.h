@@ -1,6 +1,7 @@
 #pragma once
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
 #include "menu_item.h"
@@ -17,6 +18,35 @@ public:
     String pictureUrl;
   };
 
+  // Helper: returns a configured WiFiClientSecure singleton.
+  // By default this client is set to `setInsecure()` to make it easy to
+  // test against self-signed/dev servers. For production, replace the
+  // setInsecure() call with `setCACert(root_ca_pem)` or use certificate
+  // pinning. See notes below.
+  static WiFiClientSecure& tlsClient() {
+    static WiFiClientSecure client;
+    static bool inited = false;
+    if (!inited) {
+      inited = true;
+      // DEVELOPMENT: skip cert validation so local/dev HTTPS servers work.
+      // For production, load the CA with client.setCACert(...);
+      client.setInsecure();
+    }
+    return client;
+  }
+
+  // Begin an HTTP/HTTPS request. If `url` starts with "https://" a
+  // WiFiClientSecure is used; otherwise the plain HTTP begin is used.
+  static bool beginRequest(HTTPClient& http, const String& url) {
+    if (url.startsWith("https://")) {
+      WiFiClientSecure& client = tlsClient();
+      http.begin(client, url.c_str());
+    } else {
+      http.begin(url.c_str());
+    }
+    return true;
+  }
+
   // Fetch current player state for the configured player.
   // NOTE: This uses the `playerName` value from `secrets.h` (your configured
   // player in secrets). Do NOT change this signature to accept an arbitrary
@@ -26,8 +56,8 @@ public:
   static bool getPlayerState(PlayerState& out) {
     String url = String(apiHost) + "/players/" + String(playerName);
     if (WiFi.status() != WL_CONNECTED) return false;
-    HTTPClient http;
-    http.begin(url.c_str());
+  HTTPClient http;
+  beginRequest(http, url);
     int httpCode = http.GET();
     if (httpCode == HTTP_CODE_OK) {
       String payload = http.getString();
@@ -56,8 +86,8 @@ public:
   static bool getPlayerStateById(const String& playerId, PlayerState& out) {
     String url = String(apiHost) + "/players/" + playerId;
     if (WiFi.status() != WL_CONNECTED) return false;
-    HTTPClient http;
-    http.begin(url.c_str());
+  HTTPClient http;
+  beginRequest(http, url);
     int httpCode = http.GET();
     if (httpCode == HTTP_CODE_OK) {
       String payload = http.getString();
@@ -81,8 +111,8 @@ public:
 
   static bool postPlayPause() {
     String url = String(apiHost) + "/players/" + String(playerName) + "/play-pause";
-    HTTPClient http;
-    http.begin(url.c_str());
+  HTTPClient http;
+  beginRequest(http, url);
     int httpCode = http.POST(""); // Empty body
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
@@ -94,8 +124,8 @@ public:
     String path = maybePath.isEmpty() ? "/" : maybePath;
     String url = String(apiHost) + path;
     if (WiFi.status() != WL_CONNECTED) return false;
-    HTTPClient http;
-    http.begin(url.c_str());
+  HTTPClient http;
+  beginRequest(http, url);
     int httpCode = http.GET();
     if (httpCode == HTTP_CODE_OK) {
       String payload = http.getString();
@@ -131,8 +161,8 @@ public:
 
   static bool postPlayMedia(const String& link) {
     String url = String(apiHost) + "/players/" + String(playerName) + "/play";
-    HTTPClient http;
-    http.begin(url.c_str());
+  HTTPClient http;
+  beginRequest(http, url);
     http.addHeader("Content-Type", "application/json");
     String body = String("{\"link\":\"") + link + "\"}";
     int httpCode = http.POST(body);
@@ -142,8 +172,8 @@ public:
 
   static bool postAlbumPlay(const String& albumId) {
     String url = String(apiHost) + "/players/" + String(playerName) + "/play-album";
-    HTTPClient http;
-    http.begin(url.c_str());
+  HTTPClient http;
+  beginRequest(http, url);
     http.addHeader("Content-Type", "application/json");
     String body = String("{\"album_id\":\"") + albumId + "\"}";
     int httpCode = http.POST(body);
@@ -153,8 +183,8 @@ public:
 
   static bool postPlayerStop() {
     String url = String(apiHost) + "/players/" + String(playerName) + "/stop";
-    HTTPClient http;
-    http.begin(url.c_str());
+  HTTPClient http;
+  beginRequest(http, url);
     int httpCode = http.POST(""); // Empty body
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
@@ -163,7 +193,7 @@ public:
   static bool postVolumeUp() {
     String url = String(apiHost) + "/players/" + String(playerName) + "/volume-up";
     HTTPClient http;
-    http.begin(url.c_str());
+    beginRequest(http, url);
     int httpCode = http.POST("");
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
@@ -172,7 +202,7 @@ public:
   static bool postVolumeDown() {
     String url = String(apiHost) + "/players/" + String(playerName) + "/volume-down";
     HTTPClient http;
-    http.begin(url.c_str());
+    beginRequest(http, url);
     int httpCode = http.POST("");
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
