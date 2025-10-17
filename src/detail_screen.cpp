@@ -37,8 +37,12 @@ void DetailScreen::drawCall() {
     if (currentDetail.name != lastName) {
         tft.fillScreen(TFT_BLACK);
         tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-        tft.setTextSize(3);
-        tft.drawCentreString(currentDetail.name.c_str(), 160, 100, 3);
+        // Use display center so rotation / resolution doesn't place text off-screen
+        int cx = tft.width() / 2;
+        int cy = tft.height() / 2;
+        // Use a medium built-in font for clear rendering
+        const int fontNum = 2;
+        tft.drawCentreString(currentDetail.name.c_str(), cx, cy - 10, fontNum);
         lastName = currentDetail.name;
     }
 }

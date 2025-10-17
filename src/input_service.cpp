@@ -29,12 +29,12 @@ void InputService::handleEncoder()
   acc += delta;
 
   // Delegate encoder events to current screen
-  while (acc >= 2) {
-    acc -= 2;
+  while (acc >= IMPULSES_PER_CLICK) {
+    acc -= IMPULSES_PER_CLICK;
     currentScreen->handleEncoderInc();
   }
-  while (acc <= -2) {
-    acc += 2;
+  while (acc <= -IMPULSES_PER_CLICK) {
+    acc += IMPULSES_PER_CLICK;
     currentScreen->handleEncoderDec();
   }
 }
