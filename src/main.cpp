@@ -34,8 +34,6 @@ TFT_eSPI tft = TFT_eSPI();
 
 void setup()
 {
-  Serial.begin(115200);
-
   // LightService setup
   lightService = new LightService();
   lightService->begin();

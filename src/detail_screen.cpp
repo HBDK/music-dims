@@ -9,28 +9,23 @@ DetailScreen::DetailScreen(MenuItem& detail, TFT_eSPI& display)
 
 void DetailScreen::handleEncoderInc() {
     bool ok = ApiService::postVolumeUp();
-    if (!ok) Serial.println("Failed to POST volume up");
     lastPoll = 4000;
 }
 
 void DetailScreen::handleEncoderDec() {
     bool ok = ApiService::postVolumeDown();
-    if (!ok) Serial.println("Failed to POST volume down");
     lastPoll = 4000;
 }
 
 ScreenAction DetailScreen::handleBackRelease(uint32_t pressLengthMs) {
     if (PlayerUtils::StopIfLongPress(pressLengthMs)) {
-        Serial.println("Playback stopped due to long press");
         return ScreenAction::None;
     }
     return ScreenAction::SwitchToMenu;
 }
 
 ScreenAction DetailScreen::handleDotRelease(uint32_t pressLengthMs) {
-    Serial.println("POST to play/pause");
     bool ok = ApiService::postPlayPause();
-    if (!ok) Serial.println("Failed to POST play/pause");
     return ScreenAction::None;
 }
 

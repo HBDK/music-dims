@@ -19,33 +19,21 @@ void MenuScreen::handleEncoderDec() {
 
 ScreenAction MenuScreen::handleBackRelease(uint32_t pressLengthMs) {
     if (PlayerUtils::StopIfLongPress(pressLengthMs)) {
-        Serial.println("Playback stopped due to long press");
         return ScreenAction::None;
     }
     bool ok = ApiService::fetchMenuItems(menuItems, menuCount, ApiService::backLink);
     menuIndex = 0;
-    if (!ok) Serial.println("Failed to fetch previous menu!");
     return ScreenAction::SwitchToMenu;
 }
 
 ScreenAction MenuScreen::handleDotRelease(uint32_t pressLengthMs) {
     MenuItem& selected = menuItems[menuIndex];
     if (selected.link.startsWith("player:")) {
-        Serial.print("Selected for playback: ");
-        Serial.print(selected.id);
-        Serial.print(", name: ");
-        Serial.println(selected.name);
         bool playOk = ApiService::postPlayMedia(selected.link);
-        if (!playOk) Serial.println("Failed to POST play to media endpoint");
         return ScreenAction::SwitchToDetail;
     } else {
         bool ok = ApiService::fetchMenuItems(menuItems, menuCount, selected.link);
         menuIndex = 0;
-        Serial.print("Selected id: ");
-        Serial.print(selected.id);
-        Serial.print(", name: ");
-        Serial.println(selected.name);
-        if (!ok) Serial.println("Failed to fetch next menu!");
         return ScreenAction::None;
     }
 }
