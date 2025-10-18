@@ -5,7 +5,6 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include "input_service.h"
-#include "light_service.h"
 
 // -------------------- WiFi & API Integration --------------------
 // API service and MenuItem struct
@@ -26,7 +25,6 @@ MenuScreen* menuScreen = nullptr;
 DetailScreen* detailScreen = nullptr;
 
 InputService* inputService = nullptr;
-LightService* lightService = nullptr;
 
 constexpr int MENU_VISIBLE = 5; // Number of items visible at once
 
@@ -34,10 +32,6 @@ TFT_eSPI tft = TFT_eSPI();
 
 void setup()
 {
-  // LightService setup
-  lightService = new LightService();
-  lightService->begin();
-
   // Display
   tft.init();
   tft.setRotation(3); // Landscape
@@ -49,7 +43,7 @@ void setup()
   // InputService setup
   menuScreen = new MenuScreen(menuItems, menuCount, menuIndex, tft);
   currentScreen = menuScreen;
-  inputService = new InputService(currentScreen, lightService);
+  inputService = new InputService(currentScreen);
   inputService->begin();
 
   WiFi.begin(ssid, password);

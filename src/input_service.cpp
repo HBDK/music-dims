@@ -1,14 +1,14 @@
-#include "input_service.h"
 #include <Arduino.h>
 #include <ESP32Encoder.h>
+#include "input_service.h"
 
 static ESP32Encoder encoder;
 
 
-InputService::InputService(IScreen* screen, LightService* light)
+InputService::InputService(IScreen* screen)
         : lastEncoder(0), encoderDelta(0), lastDotState(false), lastBackState(false),
             dotPressStart(0), backPressStart(0),
-            dotReleased(false), backReleased(false), currentScreen(screen), lightService(light){}
+            dotReleased(false), backReleased(false), currentScreen(screen) {}
 
 void InputService::begin() {
     pinMode(PIN_ENC_SW, INPUT_PULLUP);
@@ -68,17 +68,11 @@ ScreenAction InputService::poll() {
     } else if (!backState && lastBackState) {
         uint32_t backPressLength = millis() - backPressStart;
         action = currentScreen->handleBackRelease(backPressLength);
-        lightService->setButtonLed(32, 0, 32);
-        lightService->show();
     }
 
     if (backState)
     {
         uint32_t pressDuration = millis() - backPressStart;
-        if (pressDuration > 1000) {
-            lightService->setButtonLed(0, 0, 0);
-            lightService->show();
-        }
     }
 
     lastBackState = backState;

@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
 #include "screen_interface.h"
-#include "light_service.h"
 
 class InputService {
 public:
@@ -11,12 +10,11 @@ public:
     static constexpr uint8_t PIN_BACK_BTN = 3;
     static constexpr uint8_t IMPULSES_PER_CLICK = 1;
 
-    InputService(IScreen *screen, LightService *light);
+    InputService(IScreen *screen);
     void begin();
     ScreenAction poll();
     IScreen* currentScreen;
 private:
-    LightService* lightService;
     void handleEncoder();
     int32_t lastEncoder;
     int encoderDelta;

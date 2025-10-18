@@ -24,7 +24,7 @@ This project consists of an ESP32 firmware and a .NET Web API backend that toget
 - ESP32 microcontroller
 - TFT display (configured via TFT_eSPI library) 
 - Rotary encoder with push button
-- RGB NeoPixel LEDs (3 pixels: 2 for buttons, 1 for backlight)
+- Single RGB LED wired to GPIO pins: Red=GPIO4, Green=GPIO16, Blue=GPIO17
 
 ## Project Structure
 ```
