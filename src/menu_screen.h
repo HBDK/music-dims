@@ -16,6 +16,7 @@ public:
     void forceRedraw();
 private:
     MenuItem* menuItems;
+    int backIndex;
     int& menuCount;
     int& menuIndex;
     TFT_eSPI& tft;

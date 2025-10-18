@@ -5,7 +5,7 @@
 #include "player_utils.h"
 
 MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, TFT_eSPI& display)
-    : menuItems(items), menuCount(count), menuIndex(index), tft(display), lastMenuIndex(-1), lastMenuCount(-1) {}
+    : menuItems(items), menuCount(count), menuIndex(index), tft(display), lastMenuIndex(-1), lastMenuCount(-1), backIndex(0) {}
 
 void MenuScreen::handleEncoderInc() {
     menuIndex++;
@@ -22,7 +22,7 @@ ScreenAction MenuScreen::handleBackRelease(uint32_t pressLengthMs) {
         return ScreenAction::None;
     }
     bool ok = ApiService::fetchMenuItems(menuItems, menuCount, ApiService::backLink);
-    menuIndex = 0;
+    menuIndex = menuCount > backIndex ? backIndex : 0;
     return ScreenAction::SwitchToMenu;
 }
 
@@ -30,9 +30,11 @@ ScreenAction MenuScreen::handleDotRelease(uint32_t pressLengthMs) {
     MenuItem& selected = menuItems[menuIndex];
     if (selected.link.startsWith("player:")) {
         bool playOk = ApiService::postPlayMedia(selected.link);
+        backIndex = menuIndex;
         return ScreenAction::SwitchToDetail;
     } else {
         bool ok = ApiService::fetchMenuItems(menuItems, menuCount, selected.link);
+        backIndex = menuIndex;
         menuIndex = 0;
         return ScreenAction::None;
     }
