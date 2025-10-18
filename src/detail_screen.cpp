@@ -3,6 +3,7 @@
 #include "api_service.h"
 #include <Arduino.h>
 #include "player_utils.h"
+#include "player_service.h"
 
 DetailScreen::DetailScreen(MenuItem& detail, TFT_eSPI& display)
     : currentDetail(detail), tft(display) {}
@@ -30,10 +31,13 @@ ScreenAction DetailScreen::handleDotRelease(uint32_t pressLengthMs) {
 }
 
 void DetailScreen::drawCall() {
-    // Draw detail view: title, artist, album - only redraw when content changes
-    String title = cachedState.title;
-    String artist = cachedState.artist;
-    String album = cachedState.album.length() ? cachedState.album : currentDetail.name;
+    // Read state from PlayerService; if none available, show placeholder
+    ApiService::PlayerState st;
+    bool ok = PlayerService::getState(st);
+
+    String title = ok ? st.title : String("None");
+    String artist = ok ? st.artist : String("");
+    String album = (ok && st.album.length()) ? st.album : currentDetail.name;
 
     if (title != lastTitle) {
         tft.fillScreen(TFT_BLACK);
@@ -50,7 +54,7 @@ void DetailScreen::drawCall() {
         tft.drawCentreString(album.c_str(), cx, y + 44, subFont);
 
         // Draw volume / muted state in top-right
-        String volStr = cachedState.muted ? String("MUTE") : String("Vol:") + String(cachedState.volume);
+        String volStr = ok && st.muted ? String("MUTE") : (ok ? String("Vol:") + String(st.volume) : String("Vol:?"));
         int volFont = 1;
         int volW = tft.textWidth(volStr);
         int volX = tft.width() - 10 - volW;
@@ -67,25 +71,12 @@ void DetailScreen::forceRedraw() {
 }
 
 void DetailScreen::pollIfNeeded(unsigned long nowMillis) {
-    if (nowMillis - lastPoll < pollIntervalMs) return;
-    lastPoll = nowMillis;
-
-    ApiService::PlayerState st;
-    bool ok = ApiService::getPlayerState(st);
-    if (!ok) return; // keep previous cachedState
-
-    // Update cached state and force redraw when title/artist/album/state/volume/muted changed
-    bool changed = false;
-    if (st.title != cachedState.title) changed = true;
-    if (st.artist != cachedState.artist) changed = true;
-    if (st.album != cachedState.album) changed = true;
-    if (st.state != cachedState.state) changed = true;
-    if (st.volume != cachedState.volume) changed = true;
-    if (st.muted != cachedState.muted) changed = true;
-
-    cachedState = st;
-    if (changed) {
-        forceRedraw();
-    }
+    // DetailScreen no longer polls the API directly; PlayerService polls
+    // globally. However, the screen can trigger a redraw if the global
+    // state has changed since last draw.
+    // We simply call drawCall() which will fetch the latest cached state
+    // and redraw if needed.
+    (void)nowMillis;
+    drawCall();
 }
 

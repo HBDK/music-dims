@@ -10,6 +10,7 @@
 // API service and MenuItem struct
 #include "menu_item.h"
 #include "api_service.h"
+#include "player_service.h"
 
 // Secrets config
 #include "secrets.h"
@@ -46,6 +47,9 @@ void setup()
   inputService = new InputService(currentScreen);
   inputService->begin();
 
+  // Start player service which will poll the API periodically in the main loop
+  PlayerService::begin();
+
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -75,7 +79,9 @@ void loop()
   }
 
   unsigned long now = millis();
-  // If on detail screen, allow it to poll state periodically
+  // Poll global PlayerService (will update cached player state)
+  PlayerService::pollIfNeeded(now);
+  // Let the detail screen react to the cached state when active
   if (currentScreen == detailScreen && detailScreen != nullptr) {
     detailScreen->pollIfNeeded(now);
   }
