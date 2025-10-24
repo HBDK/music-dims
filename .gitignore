@@ -10,3 +10,4 @@ src/secrets.h
 backend/MusicDimsApi/.idea/.idea.MusicDimsApi/.idea
 nohup.out
 backend/MusicDimsApi/Api/appsettings.secrets.json
+src/secrets.cpp
