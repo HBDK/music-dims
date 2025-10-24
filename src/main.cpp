@@ -39,7 +39,8 @@ void setup()
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.setTextSize(2);
-  tft.drawCentreString("Connecting WiFi...", 160, 30, 2);
+  // swapped macros: use TFT_HEIGHT where width was used and vice-versa
+  tft.drawCentreString("Connecting WiFi...", TFT_HEIGHT / 2, TFT_WIDTH / 16, 2);
 
   // InputService setup
   menuScreen = new MenuScreen(menuItems, menuCount, menuIndex, tft);
@@ -55,7 +56,7 @@ void setup()
     delay(500);
   }
   tft.fillScreen(TFT_BLACK);
-  tft.drawCentreString("WiFi connected!", 160, 30, 2);
+  tft.drawCentreString("WiFi connected!", TFT_HEIGHT / 2, TFT_WIDTH / 16, 2);
   delay(500);
 
   ApiService::fetchMenuItems(menuItems, menuCount, "/");

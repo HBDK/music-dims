@@ -3,6 +3,8 @@
 #include "api_service.h"
 #include <Arduino.h>
 #include "player_utils.h"
+// Use display dimensions defined in User_Setup.h (TFT_eSPI)
+#include "User_Setup.h"
 
 MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, TFT_eSPI& display)
     : menuItems(items), menuCount(count), menuIndex(index), tft(display), lastMenuIndex(-1), lastMenuCount(-1), backIndex(0) {}
@@ -44,8 +46,11 @@ void MenuScreen::drawError() {
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_RED, TFT_BLACK);
     tft.setTextSize(2);
-    tft.drawCentreString("No items found!", 160, 60, 2);
-    tft.drawCentreString("Check API & WiFi", 160, 100, 2);
+    // swapped: use TFT_HEIGHT where code previously used TFT_WIDTH, and vice-versa
+    int cx = TFT_HEIGHT / 2;
+    int y1 = TFT_WIDTH / 8;
+    tft.drawCentreString("No items found!", cx, y1, 2);
+    tft.drawCentreString("Check API & WiFi", cx, y1 + (TFT_WIDTH / 16), 2);
 }
 
 // Helper: Truncate long names for menu display
@@ -65,16 +70,23 @@ void MenuScreen::drawCall() {
         if (menuCount == 0) {
             drawError();
         } else {
-            int scrollStart = menuIndex - 2;
+            // Layout computed from screen size so it adapts to different displays
+            // swapped: use width/height macros oppositely to match orientation mapping
+            const int topMargin = TFT_WIDTH / 12; // ~40 on 480px high when swapped
+            const int itemHeight = TFT_WIDTH / 12; // spacing between items
+            const int visibleCount = min(5, max(1, TFT_WIDTH / itemHeight));
+            int scrollStart = menuIndex - (visibleCount / 2);
             if (scrollStart < 0) scrollStart = 0;
-            if (scrollStart > menuCount - 5) scrollStart = menuCount - 5;
+            if (scrollStart > menuCount - visibleCount) scrollStart = menuCount - visibleCount;
             if (scrollStart < 0) scrollStart = 0;
-            for (int i = 0; i < 5 && (scrollStart + i) < menuCount; ++i) {
-                int y = 40 + i * 40;
+            int maxChars = max(10, TFT_HEIGHT / 14); // rough estimate of chars per line (swapped)
+            int rectHeight = max(8, itemHeight - 8);
+            for (int i = 0; i < visibleCount && (scrollStart + i) < menuCount; ++i) {
+                int y = topMargin + i * itemHeight;
                 int itemIdx = scrollStart + i;
-                String displayName = fitMenuName(menuItems[itemIdx].name, 22); // 22 chars max
+                String displayName = fitMenuName(menuItems[itemIdx].name, maxChars);
                 if (itemIdx == menuIndex) {
-                    tft.fillRect(0, y - 8, 320, 32, TFT_BLUE);
+                    tft.fillRect(0, y - 8, TFT_HEIGHT, rectHeight, TFT_BLUE);
                     tft.setTextColor(TFT_WHITE, TFT_BLUE);
                 } else {
                     tft.setTextColor(TFT_WHITE, TFT_BLACK);
