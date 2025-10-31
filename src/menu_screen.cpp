@@ -74,13 +74,13 @@ void MenuScreen::drawCall() {
             // swapped: use width/height macros oppositely to match orientation mapping
             const int topMargin = TFT_WIDTH / 12; // ~40 on 480px high when swapped
             const int itemHeight = TFT_WIDTH / 12; // spacing between items
-            const int visibleCount = min(5, max(1, TFT_WIDTH / itemHeight));
+            const int visibleCount = max(1, (TFT_WIDTH - 2 * topMargin)/ itemHeight);
             int scrollStart = menuIndex - (visibleCount / 2);
             if (scrollStart < 0) scrollStart = 0;
             if (scrollStart > menuCount - visibleCount) scrollStart = menuCount - visibleCount;
             if (scrollStart < 0) scrollStart = 0;
             int maxChars = max(10, TFT_HEIGHT / 14); // rough estimate of chars per line (swapped)
-            int rectHeight = max(8, itemHeight - 8);
+            int rectHeight = itemHeight;
             for (int i = 0; i < visibleCount && (scrollStart + i) < menuCount; ++i) {
                 int y = topMargin + i * itemHeight;
                 int itemIdx = scrollStart + i;

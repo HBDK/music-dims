@@ -11,6 +11,8 @@ InputService::InputService(IScreen* screen)
             dotReleased(false), backReleased(false), currentScreen(screen) {}
 
 void InputService::begin() {
+
+
     pinMode(PIN_ENC_SW, INPUT_PULLUP);
     pinMode(PIN_BACK_BTN, INPUT_PULLUP);
     ESP32Encoder::useInternalWeakPullResistors = puType::none;
