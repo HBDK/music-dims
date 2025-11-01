@@ -2,7 +2,7 @@
 #include "screen_action.h"
 #include "api_service.h"
 #include <Arduino.h>
-#include "player_utils.h"
+#include "player_service.h"
 #include "User_Setup.h"
 
 MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, TFT_eSPI& display)
@@ -25,8 +25,8 @@ ScreenAction MenuScreen::handleBackShortPress() {
 }
 
 ScreenAction MenuScreen::handleBackLongPress() {
-    PlayerUtils::StopIfLongPress(1000);
-    return handleBackShortPress();
+    PlayerService::StopPlayback();
+    return ScreenAction::None;
 }
 
 ScreenAction MenuScreen::handleDotShortPress() {

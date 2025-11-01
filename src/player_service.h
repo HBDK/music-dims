@@ -15,6 +15,10 @@ public:
     // Last time the state was updated (millis), or 0 if never
     static unsigned long lastUpdatedMillis();
 
+    // Attempt to stop playback (previously in PlayerUtils::StopIfLongPress).
+    // Returns true if the stop command succeeded.
+    static bool StopPlayback();
+
 private:
     static ApiService::PlayerState cachedState;
     static unsigned long lastUpdate;

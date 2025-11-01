@@ -11,6 +11,11 @@ void PlayerService::begin() {
     // nothing to init for now
 }
 
+bool PlayerService::StopPlayback() {
+    bool stopOk = ApiService::postPlayerStop();
+    return stopOk;
+}
+
 void PlayerService::pollIfNeeded(unsigned long nowMillis) {
     if (nowMillis - lastPoll < pollIntervalMs) return;
     lastPoll = nowMillis;

@@ -2,7 +2,6 @@
 #include "screen_action.h"
 #include "api_service.h"
 #include <Arduino.h>
-#include "player_utils.h"
 #include "player_service.h"
 
 DetailScreen::DetailScreen(MenuItem& detail, TFT_eSPI& display)
@@ -23,7 +22,7 @@ ScreenAction DetailScreen::handleBackShortPress() {
 }
 
 ScreenAction DetailScreen::handleBackLongPress() {
-    PlayerUtils::StopIfLongPress(1000);
+    PlayerService::StopPlayback();
     return ScreenAction::None;
 }
 
