@@ -14,12 +14,19 @@ const ApiService::PlayerState* PlayerService::getCachedStatePtr() {
 }
 
 void PlayerService::begin() {
-    // nothing to init for now
 }
 
 bool PlayerService::StopPlayback() {
     bool stopOk = ApiService::postPlayerStop();
     return stopOk;
+}
+
+bool PlayerService::playMedia(const String& link) {
+    bool ok = ApiService::postPlayMedia(link);
+    if (ok) {
+        lastIdleOrOff = millis();
+    }
+    return ok;
 }
 
 void PlayerService::pollIfNeeded(unsigned long nowMillis) {
@@ -30,10 +37,7 @@ void PlayerService::pollIfNeeded(unsigned long nowMillis) {
     bool ok = ApiService::getPlayerState(st);
     if (!ok) return;
 
-    // Update cached state and track lastUpdate
-    // Detect transition into idle/off state and record when it first occurred
     if (!hasState) {
-        // No previous state known
         if (st.isIdleOrOff()) {
             lastIdleOrOff = nowMillis;
         } else {
@@ -43,10 +47,8 @@ void PlayerService::pollIfNeeded(unsigned long nowMillis) {
         bool prevIdle = cachedState.isIdleOrOff();
         bool nowIdle = st.isIdleOrOff();
         if (!prevIdle && nowIdle) {
-            // Just transitioned into idle/off
             lastIdleOrOff = nowMillis;
         } else if (!nowIdle) {
-            // Not idle/off now — clear the idle timestamp
             lastIdleOrOff = 0;
         }
     }

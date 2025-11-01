@@ -22,6 +22,9 @@ public:
     // Timestamp (millis) when the player state first became "idle" or "off".
     // Zero means we currently don't consider the player idle/off.
     static unsigned long lastIdleOrOffMillis();
+
+    // Play media by link (delegates to ApiService). Returns true on success.
+    static bool playMedia(const String& link);
     // Return pointer to the cached state (nullptr if not available).
     static const ApiService::PlayerState* getCachedStatePtr();
 

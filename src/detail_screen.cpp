@@ -95,9 +95,10 @@ void DetailScreen::forceRedraw() {
 }
 
 ScreenAction DetailScreen::poll() {
+    const int thresholdMs = 300000;
     const ApiService::PlayerState* pst = PlayerService::getCachedStatePtr();
     unsigned long idleAt = PlayerService::lastIdleOrOffMillis();
-    if (pst && pst->isIdleOrOff() && idleAt != 0 && (millis() - idleAt) >= 6000) {
+    if (pst && pst->isIdleOrOff() && idleAt != 0 && (millis() - idleAt) >= thresholdMs) {
         return ScreenAction::SwitchToMenu;
     }
     return ScreenAction::None;

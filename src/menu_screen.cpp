@@ -32,7 +32,7 @@ ScreenAction MenuScreen::handleBackLongPress() {
 ScreenAction MenuScreen::handleDotShortPress() {
     MenuItem& selected = menuItems[menuIndex];
     if (selected.link.startsWith("player:")) {
-        bool playOk = ApiService::postPlayMedia(selected.link);
+        bool playOk = PlayerService::playMedia(selected.link);
         backIndex = menuIndex;
         return ScreenAction::SwitchToDetail;
     } else {
