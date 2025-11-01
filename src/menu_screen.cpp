@@ -3,7 +3,6 @@
 #include "api_service.h"
 #include <Arduino.h>
 #include "player_utils.h"
-// Use display dimensions defined in User_Setup.h (TFT_eSPI)
 #include "User_Setup.h"
 
 MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, TFT_eSPI& display)
@@ -20,15 +19,29 @@ void MenuScreen::handleEncoderDec() {
 }
 
 ScreenAction MenuScreen::handleBackRelease(uint32_t pressLengthMs) {
-    if (PlayerUtils::StopIfLongPress(pressLengthMs)) {
-        return ScreenAction::None;
-    }
+    if (pressLengthMs >= 1000) return handleBackLongPress();
+    return handleBackShortPress();
+}
+
+ScreenAction MenuScreen::handleDotRelease(uint32_t pressLengthMs) {
+    if (pressLengthMs >= 1000) return handleDotLongPress();
+    return handleDotShortPress();
+}
+
+ScreenAction MenuScreen::handleBackShortPress() {
     bool ok = ApiService::fetchMenuItems(menuItems, menuCount, ApiService::backLink);
     menuIndex = menuCount > backIndex ? backIndex : 0;
     return ScreenAction::SwitchToMenu;
 }
 
-ScreenAction MenuScreen::handleDotRelease(uint32_t pressLengthMs) {
+ScreenAction MenuScreen::handleBackLongPress() {
+    if (PlayerUtils::StopIfLongPress(1000)) {
+        return ScreenAction::None;
+    }
+    return handleBackShortPress();
+}
+
+ScreenAction MenuScreen::handleDotShortPress() {
     MenuItem& selected = menuItems[menuIndex];
     if (selected.link.startsWith("player:")) {
         bool playOk = ApiService::postPlayMedia(selected.link);
@@ -42,18 +55,20 @@ ScreenAction MenuScreen::handleDotRelease(uint32_t pressLengthMs) {
     }
 }
 
+ScreenAction MenuScreen::handleDotLongPress() {
+    return ScreenAction::None;
+}
+
 void MenuScreen::drawError() {
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_RED, TFT_BLACK);
     tft.setTextSize(2);
-    // swapped: use TFT_HEIGHT where code previously used TFT_WIDTH, and vice-versa
     int cx = TFT_HEIGHT / 2;
     int y1 = TFT_WIDTH / 8;
     tft.drawCentreString("No items found!", cx, y1, 2);
     tft.drawCentreString("Check API & WiFi", cx, y1 + (TFT_WIDTH / 16), 2);
 }
 
-// Helper: Truncate long names for menu display
 String fitMenuName(const String& name, int maxChars) {
     if (name.length() > maxChars) {
         return name.substring(0, maxChars - 3) + "...";
@@ -62,7 +77,6 @@ String fitMenuName(const String& name, int maxChars) {
 }
 
 void MenuScreen::drawCall() {
-    // Only redraw if menuIndex or menuCount changed
     if (menuIndex != lastMenuIndex || menuCount != lastMenuCount) {
         tft.fillScreen(TFT_BLACK);
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -70,8 +84,6 @@ void MenuScreen::drawCall() {
         if (menuCount == 0) {
             drawError();
         } else {
-            // Layout computed from screen size so it adapts to different displays
-            // swapped: use width/height macros oppositely to match orientation mapping
             const int topMargin = TFT_WIDTH / 12; // ~40 on 480px high when swapped
             const int itemHeight = TFT_WIDTH / 12; // spacing between items
             const int visibleCount = max(1, (TFT_WIDTH - 2 * topMargin)/ itemHeight);

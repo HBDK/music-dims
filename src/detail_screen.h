@@ -12,6 +12,10 @@ public:
     void handleEncoderDec() override;
     ScreenAction handleBackRelease(uint32_t pressLengthMs) override;
     ScreenAction handleDotRelease(uint32_t pressLengthMs) override;
+    ScreenAction handleBackShortPress() override;
+    ScreenAction handleBackLongPress() override;
+    ScreenAction handleDotShortPress() override;
+    ScreenAction handleDotLongPress() override;
     void drawCall() override;
     void forceRedraw();
     void pollIfNeeded(unsigned long nowMillis);
@@ -21,5 +25,4 @@ private:
     String lastTitle = "None";
     unsigned long lastPoll = 5000;
     unsigned long pollIntervalMs = 5000; // default 5s
-    // Detail screen now reads state from PlayerService
 };

@@ -11,8 +11,6 @@ InputService::InputService(IScreen* screen)
             dotReleased(false), backReleased(false), currentScreen(screen) {}
 
 void InputService::begin() {
-
-
     pinMode(PIN_ENC_SW, INPUT_PULLUP);
     pinMode(PIN_BACK_BTN, INPUT_PULLUP);
     ESP32Encoder::useInternalWeakPullResistors = puType::none;
@@ -53,7 +51,11 @@ ScreenAction InputService::poll() {
         dotPressStart = millis();
     } else if (!dotState && lastDotState) {
         uint32_t dotPressLength = millis() - dotPressStart;
-        action = currentScreen->handleDotRelease(dotPressLength);
+        if (dotPressLength >= 1000) {
+            action = currentScreen->handleDotLongPress();
+        } else {
+            action = currentScreen->handleDotShortPress();
+        }
     }
 
     lastDotState = dotState;
@@ -69,7 +71,11 @@ ScreenAction InputService::poll() {
         backPressStart = millis();
     } else if (!backState && lastBackState) {
         uint32_t backPressLength = millis() - backPressStart;
-        action = currentScreen->handleBackRelease(backPressLength);
+        if (backPressLength >= 1000) {
+            action = currentScreen->handleBackLongPress();
+        } else {
+            action = currentScreen->handleBackShortPress();
+        }
     }
 
     if (backState)
