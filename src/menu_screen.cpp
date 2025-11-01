@@ -18,16 +18,6 @@ void MenuScreen::handleEncoderDec() {
     if (menuIndex < 0) menuIndex = menuCount - 1;
 }
 
-ScreenAction MenuScreen::handleBackRelease(uint32_t pressLengthMs) {
-    if (pressLengthMs >= 1000) return handleBackLongPress();
-    return handleBackShortPress();
-}
-
-ScreenAction MenuScreen::handleDotRelease(uint32_t pressLengthMs) {
-    if (pressLengthMs >= 1000) return handleDotLongPress();
-    return handleDotShortPress();
-}
-
 ScreenAction MenuScreen::handleBackShortPress() {
     bool ok = ApiService::fetchMenuItems(menuItems, menuCount, ApiService::backLink);
     menuIndex = menuCount > backIndex ? backIndex : 0;
@@ -35,9 +25,7 @@ ScreenAction MenuScreen::handleBackShortPress() {
 }
 
 ScreenAction MenuScreen::handleBackLongPress() {
-    if (PlayerUtils::StopIfLongPress(1000)) {
-        return ScreenAction::None;
-    }
+    PlayerUtils::StopIfLongPress(1000);
     return handleBackShortPress();
 }
 

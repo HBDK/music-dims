@@ -18,23 +18,13 @@ void DetailScreen::handleEncoderDec() {
     lastPoll = 4000;
 }
 
-ScreenAction DetailScreen::handleBackRelease(uint32_t pressLengthMs) {
-    if (pressLengthMs >= 1000) return handleBackLongPress();
-    return handleBackShortPress();
-}
-
-ScreenAction DetailScreen::handleDotRelease(uint32_t pressLengthMs) {
-    if (pressLengthMs >= 1000) return handleDotLongPress();
-    return handleDotShortPress();
-}
-
 ScreenAction DetailScreen::handleBackShortPress() {
     return ScreenAction::SwitchToMenu;
 }
 
 ScreenAction DetailScreen::handleBackLongPress() {
-    if (PlayerUtils::StopIfLongPress(1000)) return ScreenAction::None;
-    return ScreenAction::SwitchToMenu;
+    PlayerUtils::StopIfLongPress(1000);
+    return ScreenAction::None;
 }
 
 ScreenAction DetailScreen::handleDotShortPress() {

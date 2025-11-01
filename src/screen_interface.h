@@ -10,16 +10,8 @@ public:
     virtual void handleEncoderDec() = 0;
     virtual ScreenAction handleBackShortPress() { return ScreenAction::None; }
     virtual ScreenAction handleBackLongPress() { return ScreenAction::None; }
-    virtual ScreenAction handleBackRelease(uint32_t pressLengthMs) {
-        if (pressLengthMs >= 1000) return handleBackLongPress();
-        return handleBackShortPress();
-    }
 
     virtual ScreenAction handleDotShortPress() { return ScreenAction::None; }
     virtual ScreenAction handleDotLongPress() { return ScreenAction::None; }
-    virtual ScreenAction handleDotRelease(uint32_t pressLengthMs) {
-        if (pressLengthMs >= 1000) return handleDotLongPress();
-        return handleDotShortPress();
-    }
     virtual void drawCall() = 0;
 };

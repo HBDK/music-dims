@@ -10,8 +10,7 @@ public:
     DetailScreen(MenuItem& detail, TFT_eSPI& display);
     void handleEncoderInc() override;
     void handleEncoderDec() override;
-    ScreenAction handleBackRelease(uint32_t pressLengthMs) override;
-    ScreenAction handleDotRelease(uint32_t pressLengthMs) override;
+    
     ScreenAction handleBackShortPress() override;
     ScreenAction handleBackLongPress() override;
     ScreenAction handleDotShortPress() override;
