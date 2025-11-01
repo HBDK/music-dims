@@ -36,14 +36,13 @@ ScreenAction DetailScreen::handleDotLongPress() {
 }
 
 void DetailScreen::drawCall() {
-    ApiService::PlayerState st;
-    bool ok = PlayerService::getState(st);
+    const ApiService::PlayerState* pst = PlayerService::getCachedStatePtr();
 
-    String title = ok ? st.title : String("None");
-    String artist = ok ? st.artist : String("");
-    String album = (ok && st.album.length()) ? st.album : currentDetail.name;
+    String title = pst ? pst->title : String("None");
+    String artist = pst ? pst->artist : String("");
+    String album = (pst && pst->album.length()) ? pst->album : currentDetail.name;
 
-    String volStr = ok && st.muted ? String("MUTE") : (ok ? String("Vol:") + String(st.volume) : String("Vol:?"));
+    String volStr = (pst && pst->muted) ? String("MUTE") : (pst ? String("Vol:") + String(pst->volume) : String("Vol:?"));
 
     if (title != lastTitle) {
         drawHeader(title, artist, album);
@@ -93,4 +92,13 @@ void DetailScreen::forceRedraw() {
     lastTitle = "None";
     lastVolStr = "None";
     drawCall();
+}
+
+ScreenAction DetailScreen::poll() {
+    const ApiService::PlayerState* pst = PlayerService::getCachedStatePtr();
+    unsigned long idleAt = PlayerService::lastIdleOrOffMillis();
+    if (pst && pst->isIdleOrOff() && idleAt != 0 && (millis() - idleAt) >= 6000) {
+        return ScreenAction::SwitchToMenu;
+    }
+    return ScreenAction::None;
 }

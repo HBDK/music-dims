@@ -66,6 +66,9 @@ void setup()
 void loop()
 {
   ScreenAction action = inputService->poll();
+  if (action == ScreenAction::None && currentScreen != nullptr) {
+    action = currentScreen->poll();
+  }
 
   if (action == ScreenAction::SwitchToDetail) {
     delete detailScreen;
@@ -82,7 +85,6 @@ void loop()
   unsigned long now = millis();
 
   PlayerService::pollIfNeeded(now);
-
   currentScreen->drawCall();
   delay(10);
 }

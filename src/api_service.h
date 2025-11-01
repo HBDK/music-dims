@@ -8,7 +8,8 @@
 
 class ApiService {
 public:
-  struct PlayerState {
+  class PlayerState {
+  public:
     String state;
     int volume = 0;
     bool muted = false;
@@ -16,6 +17,10 @@ public:
     String artist;
     String album;
     String pictureUrl;
+
+    bool isIdleOrOff() const {
+      return state == "idle" || state == "off";
+    }
   };
 
   // Helper: returns a configured WiFiClientSecure singleton.

@@ -18,11 +18,18 @@ public:
     // Attempt to stop playback (previously in PlayerUtils::StopIfLongPress).
     // Returns true if the stop command succeeded.
     static bool StopPlayback();
+    
+    // Timestamp (millis) when the player state first became "idle" or "off".
+    // Zero means we currently don't consider the player idle/off.
+    static unsigned long lastIdleOrOffMillis();
+    // Return pointer to the cached state (nullptr if not available).
+    static const ApiService::PlayerState* getCachedStatePtr();
 
 private:
     static ApiService::PlayerState cachedState;
     static unsigned long lastUpdate;
     static unsigned long lastPoll;
     static unsigned long pollIntervalMs;
+    static unsigned long lastIdleOrOff;
     static bool hasState;
 };

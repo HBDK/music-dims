@@ -15,6 +15,7 @@ public:
     ScreenAction handleBackLongPress() override;
     ScreenAction handleDotShortPress() override;
     ScreenAction handleDotLongPress() override;
+    ScreenAction poll() override;
     void drawCall() override;
     void forceRedraw();
     

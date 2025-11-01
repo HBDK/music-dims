@@ -13,5 +13,6 @@ public:
 
     virtual ScreenAction handleDotShortPress() { return ScreenAction::None; }
     virtual ScreenAction handleDotLongPress() { return ScreenAction::None; }
+    virtual ScreenAction poll() { return ScreenAction::None; }
     virtual void drawCall() = 0;
 };
