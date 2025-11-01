@@ -62,12 +62,21 @@ void DetailScreen::drawHeader(const String& title, const String& artist, const S
     const int subFont = 1;
     int cx = tft.width() / 2;
     int y = tft.height() / 2 - 16;
-    tft.drawCentreString(title.c_str(), cx, y, titleFont);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.drawCentreString(artist.c_str(), cx, y + 22, subFont);
-    tft.drawCentreString(album.c_str(), cx, y + 44, subFont);
+
+    int cursor = tft.height() - 24;
+    drawAndMoveCusror(album, cursor, subFont, TFT_WHITE, cx);
+    drawAndMoveCusror(artist, cursor, subFont, TFT_WHITE, cx);
+    drawAndMoveCusror(title, cursor, titleFont, TFT_YELLOW, cx);
 
     lastTitle = title;
+}
+void DetailScreen::drawAndMoveCusror(const String& text, int& cursorY, int font, uint32_t color, int cx) {
+    if (text.length() == 0) return;
+
+    tft.setTextColor(color, TFT_BLACK);
+    tft.drawCentreString(text.c_str(), cx, cursorY, font);
+    cursorY -= (tft.fontHeight(font) + 4);
 }
 
 void DetailScreen::drawVolume(const String& volStr) {

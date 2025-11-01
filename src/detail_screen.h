@@ -21,6 +21,7 @@ public:
 private:
     void drawHeader(const String& title, const String& artist, const String& album);
     void drawVolume(const String& volStr);
+    void drawAndMoveCusror(const String& text, int& cursorY, int font, uint32_t color, int cx);
 private:
     MenuItem& currentDetail;
     TFT_eSPI& tft;
