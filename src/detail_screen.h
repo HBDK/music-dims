@@ -17,6 +17,10 @@ public:
     ScreenAction handleDotLongPress() override;
     void drawCall() override;
     void forceRedraw();
+    
+private:
+    void drawHeader(const String& title, const String& artist, const String& album);
+    void drawVolume(const String& volStr);
 private:
     MenuItem& currentDetail;
     TFT_eSPI& tft;

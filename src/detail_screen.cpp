@@ -43,35 +43,41 @@ void DetailScreen::drawCall() {
     String artist = ok ? st.artist : String("");
     String album = (ok && st.album.length()) ? st.album : currentDetail.name;
 
-    if (title != lastTitle) {
-        tft.fillScreen(TFT_BLACK);
-        tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-        const int titleFont = 1;
-        const int subFont = 1;
-        int cx = tft.width() / 2;
-        int y = tft.height() / 2 - 16;
-        tft.drawCentreString(title.c_str(), cx, y, titleFont);
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);
-        tft.drawCentreString(artist.c_str(), cx, y + 22, subFont);
-        tft.drawCentreString(album.c_str(), cx, y + 44, subFont);
-
-
-
-        lastTitle = title;
-    }
-
     String volStr = ok && st.muted ? String("MUTE") : (ok ? String("Vol:") + String(st.volume) : String("Vol:?"));
 
-    if (volStr != lastVolStr) {
-
-        int volFont = 1;
-        int volW = tft.textWidth(volStr);
-        int volX = tft.width() - 10 - volW;
-        tft.setTextColor(TFT_CYAN, TFT_BLACK);
-        tft.drawString(volStr.c_str(), volX, 8, volFont);
-
-        lastVolStr = volStr;
+    if (title != lastTitle) {
+        drawHeader(title, artist, album);
+        drawVolume(volStr);
     }
+
+    if (volStr != lastVolStr) {
+        drawVolume(volStr);
+    }
+}
+
+void DetailScreen::drawHeader(const String& title, const String& artist, const String& album) {
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    const int titleFont = 1;
+    const int subFont = 1;
+    int cx = tft.width() / 2;
+    int y = tft.height() / 2 - 16;
+    tft.drawCentreString(title.c_str(), cx, y, titleFont);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawCentreString(artist.c_str(), cx, y + 22, subFont);
+    tft.drawCentreString(album.c_str(), cx, y + 44, subFont);
+
+    lastTitle = title;
+}
+
+void DetailScreen::drawVolume(const String& volStr) {
+    int volFont = 1;
+    int volW = tft.textWidth(volStr);
+    int volX = tft.width() - 10 - volW;
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    tft.drawString(volStr.c_str(), volX, 8, volFont);
+
+    lastVolStr = volStr;
 }
 
 void DetailScreen::forceRedraw() {
