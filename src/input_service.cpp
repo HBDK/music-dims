@@ -41,19 +41,30 @@ void InputService::handleEncoder()
 
 ScreenAction InputService::handleButton(uint8_t pin, bool &lastState, uint32_t &pressStart, bool &released,
                                         ScreenAction (IScreen::*shortHandler)(), ScreenAction (IScreen::*longHandler)()) {
+
+    const int longPressThresholdMs = 1500;
     ScreenAction action = ScreenAction::None;
     bool state = digitalRead(pin) == LOW;
-    released = false;
     if (state && !lastState) {
         pressStart = millis();
-    } else if (!state && lastState) {
+        released = false;
+    }
+
+    if (state && lastState) {
         uint32_t pressLength = millis() - pressStart;
-        if (pressLength >= 1000) {
+        if (!released && pressLength >= longPressThresholdMs) {
             action = (currentScreen->*longHandler)();
-        } else {
-            action = (currentScreen->*shortHandler)();
+            released = true;
         }
     }
+
+    if (!state && lastState) {
+        if (!released) {
+            action = (currentScreen->*shortHandler)();
+        }
+        released = false;
+    }
+
     lastState = state;
     return action;
 }
@@ -63,7 +74,6 @@ ScreenAction InputService::poll() {
     ScreenAction action = ScreenAction::None;
     handleEncoder();
 
-    // Dot button
     action = handleButton(PIN_ENC_SW, lastDotState, dotPressStart, dotReleased,
                           &IScreen::handleDotShortPress, &IScreen::handleDotLongPress);
 
@@ -71,7 +81,6 @@ ScreenAction InputService::poll() {
         return action;
     }
 
-    // Back button
     action = handleButton(PIN_BACK_BTN, lastBackState, backPressStart, backReleased,
                           &IScreen::handleBackShortPress, &IScreen::handleBackLongPress);
 
