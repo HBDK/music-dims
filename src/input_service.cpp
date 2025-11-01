@@ -39,50 +39,41 @@ void InputService::handleEncoder()
   }
 }
 
+ScreenAction InputService::handleButton(uint8_t pin, bool &lastState, uint32_t &pressStart, bool &released,
+                                        ScreenAction (IScreen::*shortHandler)(), ScreenAction (IScreen::*longHandler)()) {
+    ScreenAction action = ScreenAction::None;
+    bool state = digitalRead(pin) == LOW;
+    released = false;
+    if (state && !lastState) {
+        pressStart = millis();
+    } else if (!state && lastState) {
+        uint32_t pressLength = millis() - pressStart;
+        if (pressLength >= 1000) {
+            action = (currentScreen->*longHandler)();
+        } else {
+            action = (currentScreen->*shortHandler)();
+        }
+    }
+    lastState = state;
+    return action;
+}
+
 ScreenAction InputService::poll() {
 
     ScreenAction action = ScreenAction::None;
     handleEncoder();
 
     // Dot button
-    bool dotState = digitalRead(PIN_ENC_SW) == LOW;
-    dotReleased = false;
-    if (dotState && !lastDotState) {
-        dotPressStart = millis();
-    } else if (!dotState && lastDotState) {
-        uint32_t dotPressLength = millis() - dotPressStart;
-        if (dotPressLength >= 1000) {
-            action = currentScreen->handleDotLongPress();
-        } else {
-            action = currentScreen->handleDotShortPress();
-        }
-    }
-
-    lastDotState = dotState;
+    action = handleButton(PIN_ENC_SW, lastDotState, dotPressStart, dotReleased,
+                          &IScreen::handleDotShortPress, &IScreen::handleDotLongPress);
 
     if (action != ScreenAction::None) {
         return action;
     }
 
     // Back button
-    bool backState = digitalRead(PIN_BACK_BTN) == LOW;
-    backReleased = false;
-    if (backState && !lastBackState) {
-        backPressStart = millis();
-    } else if (!backState && lastBackState) {
-        uint32_t backPressLength = millis() - backPressStart;
-        if (backPressLength >= 1000) {
-            action = currentScreen->handleBackLongPress();
-        } else {
-            action = currentScreen->handleBackShortPress();
-        }
-    }
+    action = handleButton(PIN_BACK_BTN, lastBackState, backPressStart, backReleased,
+                          &IScreen::handleBackShortPress, &IScreen::handleBackLongPress);
 
-    if (backState)
-    {
-        uint32_t pressDuration = millis() - backPressStart;
-    }
-
-    lastBackState = backState;
     return action;
 }

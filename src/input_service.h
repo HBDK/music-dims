@@ -16,6 +16,8 @@ public:
     IScreen* currentScreen;
 private:
     void handleEncoder();
+    ScreenAction handleButton(uint8_t pin, bool &lastState, uint32_t &pressStart, bool &released,
+                              ScreenAction (IScreen::*shortHandler)(), ScreenAction (IScreen::*longHandler)());
     int32_t lastEncoder;
     int encoderDelta;
     bool lastDotState, lastBackState;
