@@ -1,68 +1,40 @@
+// Moved to services folder
 #pragma once
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
-#include "menu_item.h"
+#include "models/menu_item.h"
+#include <models/player_state.h>
 
 class ApiService {
 public:
-  class PlayerState {
-  public:
-    String state;
-    int volume = 0;
-    bool muted = false;
-    String title;
-    String artist;
-    String album;
-    String pictureUrl;
 
-    bool isIdleOrOff() const {
-      return state == "idle" || state == "off";
-    }
-  };
 
-  // Helper: returns a configured WiFiClientSecure singleton.
-  // By default this client is set to `setInsecure()` to make it easy to
-  // test against self-signed/dev servers. For production, replace the
-  // setInsecure() call with `setCACert(root_ca_pem)` or use certificate
-  // pinning. See notes below.
   static WiFiClientSecure& tlsClient() {
     static WiFiClientSecure client;
     static bool inited = false;
     if (!inited) {
       inited = true;
-      // DEVELOPMENT: skip cert validation so local/dev HTTPS servers work.
-      // For production, load the CA with client.setCACert(...);
       client.setInsecure();
     }
     return client;
   }
 
-  // Shared HTTPClient instance to enable connection reuse (keep-alive)
-  // and to avoid repeated allocations which can be slow on small devices.
   static HTTPClient& sharedHttp() {
     static HTTPClient http;
     static bool inited = false;
     if (!inited) {
       inited = true;
-      // Try to keep connections alive between requests where supported.
-      // setReuse may not exist on all core versions; the call is guarded
-      // by #ifdef when available. If it's not available, leaving this
-      // comment is harmless — the http client will still be reused.
 #if defined(HTTP_TCP_CLIENT_H) || defined(HTTP_CLIENT_IMPL_H)
-      // some cores expose setReuse; compile-time guard used to be safe.
       // http.setReuse(true);
 #endif
-      // Conservative timeout for network operations (milliseconds).
       http.setTimeout(5000);
     }
     return http;
   }
 
-  // Begin an HTTP/HTTPS request. If `url` starts with "https://" a
-  // WiFiClientSecure is used; otherwise the plain HTTP begin is used.
   static bool beginRequest(HTTPClient& http, const String& url) {
     if (url.startsWith("https://")) {
       WiFiClientSecure& client = tlsClient();
@@ -73,17 +45,11 @@ public:
     return true;
   }
 
-  // Fetch current player state for the configured player.
-  // NOTE: This uses the `playerName` value from `secrets.h` (your configured
-  // player in secrets). Do NOT change this signature to accept an arbitrary
-  // id unless you intentionally want callers to pass different player ids.
-  // If you do need to query other player ids, use the explicit helper
-  // `getPlayerStateById(playerId, out)` below.
   static bool getPlayerState(PlayerState& out) {
     String url = String(apiHost) + "/players/" + String(playerName);
     if (WiFi.status() != WL_CONNECTED) return false;
-  HTTPClient& http = sharedHttp();
-  beginRequest(http, url);
+    HTTPClient& http = sharedHttp();
+    beginRequest(http, url);
     int httpCode = http.GET();
     if (httpCode == HTTP_CODE_OK) {
       String payload = http.getString();
@@ -97,7 +63,7 @@ public:
         out.artist = doc.containsKey("artist") && !doc["artist"].isNull() ? doc["artist"].as<String>() : String();
         out.album = doc.containsKey("album") && !doc["album"].isNull() ? doc["album"].as<String>() : String();
         out.pictureUrl = doc.containsKey("picture-url") && !doc["picture-url"].isNull() ? doc["picture-url"].as<String>() : String();
-  http.end();
+        http.end();
         return true;
       }
     }
@@ -105,15 +71,11 @@ public:
     return false;
   }
 
-  // Fetch current player state for an explicit player id. This is a
-  // non-breaking convenience wrapper for multi-player scenarios — it is
-  // intentionally separate from `getPlayerState` so the default behavior
-  // continues to use the `playerName` from `secrets.h`.
   static bool getPlayerStateById(const String& playerId, PlayerState& out) {
     String url = String(apiHost) + "/players/" + playerId;
     if (WiFi.status() != WL_CONNECTED) return false;
-  HTTPClient& http = sharedHttp();
-  beginRequest(http, url);
+    HTTPClient& http = sharedHttp();
+    beginRequest(http, url);
     int httpCode = http.GET();
     if (httpCode == HTTP_CODE_OK) {
       String payload = http.getString();
@@ -127,7 +89,7 @@ public:
         out.artist = doc.containsKey("artist") && !doc["artist"].isNull() ? doc["artist"].as<String>() : String();
         out.album = doc.containsKey("album") && !doc["album"].isNull() ? doc["album"].as<String>() : String();
         out.pictureUrl = doc.containsKey("picture-url") && !doc["picture-url"].isNull() ? doc["picture-url"].as<String>() : String();
-  http.end();
+        http.end();
         return true;
       }
     }
@@ -137,9 +99,9 @@ public:
 
   static bool postPlayPause() {
     String url = String(apiHost) + "/players/" + String(playerName) + "/play-pause";
-  HTTPClient& http = sharedHttp();
-  beginRequest(http, url);
-    int httpCode = http.POST(""); // Empty body
+    HTTPClient& http = sharedHttp();
+    beginRequest(http, url);
+    int httpCode = http.POST("");
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
   }
@@ -150,21 +112,16 @@ public:
     String path = maybePath.isEmpty() ? "/" : maybePath;
     String url = String(apiHost) + path;
     if (WiFi.status() != WL_CONNECTED) return false;
-  // Simple in-memory cache: if the last fetch was recent we skip
-  // re-downloading. This avoids frequent HTTPS calls when the UI
-  // refreshes rapidly.
-  static unsigned long lastMenuFetch = 0;
-  static String lastMenuPath = "";
-  const unsigned long MENU_CACHE_MS = 2000; // 2s cache
-  unsigned long now = millis();
-  if (url == lastMenuPath && (now - lastMenuFetch) < MENU_CACHE_MS) {
-    // Caller should handle stale data if needed; here we simply
-    // return false to indicate no fresh data was fetched.
-    return false;
-  }
+    static unsigned long lastMenuFetch = 0;
+    static String lastMenuPath = "";
+    const unsigned long MENU_CACHE_MS = 2000;
+    unsigned long now = millis();
+    if (url == lastMenuPath && (now - lastMenuFetch) < MENU_CACHE_MS) {
+      return false;
+    }
 
-  HTTPClient& http = sharedHttp();
-  beginRequest(http, url);
+    HTTPClient& http = sharedHttp();
+    beginRequest(http, url);
     int httpCode = http.GET();
     if (httpCode == HTTP_CODE_OK) {
       String payload = http.getString();
@@ -172,7 +129,6 @@ public:
       DeserializationError err = deserializeJson(doc, payload);
       if (!err) {
         count = 0;
-        // Only parse object with 'items' array
         if (doc.containsKey("items")) {
           JsonArray arr = doc["items"].as<JsonArray>();
           for (JsonObject obj : arr) {
@@ -184,7 +140,6 @@ public:
             }
           }
         }
-        // Save back_link if present
         if (doc.containsKey("back_link")) {
           backLink = doc["back_link"].as<String>();
         } else {
@@ -202,8 +157,8 @@ public:
 
   static bool postPlayMedia(const String& link) {
     String url = String(apiHost) + "/players/" + String(playerName) + "/play";
-  HTTPClient& http = sharedHttp();
-  beginRequest(http, url);
+    HTTPClient& http = sharedHttp();
+    beginRequest(http, url);
     http.addHeader("Content-Type", "application/json");
     String body = String("{\"link\":\"") + link + "\"}";
     int httpCode = http.POST(body);
@@ -213,8 +168,8 @@ public:
 
   static bool postAlbumPlay(const String& albumId) {
     String url = String(apiHost) + "/players/" + String(playerName) + "/play-album";
-  HTTPClient& http = sharedHttp();
-  beginRequest(http, url);
+    HTTPClient& http = sharedHttp();
+    beginRequest(http, url);
     http.addHeader("Content-Type", "application/json");
     String body = String("{\"album_id\":\"") + albumId + "\"}";
     int httpCode = http.POST(body);
@@ -224,9 +179,9 @@ public:
 
   static bool postPlayerStop() {
     String url = String(apiHost) + "/players/" + String(playerName) + "/stop";
-  HTTPClient& http = sharedHttp();
-  beginRequest(http, url);
-    int httpCode = http.POST(""); // Empty body
+    HTTPClient& http = sharedHttp();
+    beginRequest(http, url);
+    int httpCode = http.POST("");
     http.end();
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
   }
@@ -249,4 +204,3 @@ public:
     return httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_NO_CONTENT;
   }
 };
-

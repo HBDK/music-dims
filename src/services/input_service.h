@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "screen_interface.h"
+#include "screens/screen_interface.h"
 
 class InputService {
 public:

@@ -1,8 +1,8 @@
 #include "detail_screen.h"
 #include "screen_action.h"
-#include "api_service.h"
+#include "services/api_service.h"
 #include <Arduino.h>
-#include "player_service.h"
+#include "services/player_service.h"
 
 DetailScreen::DetailScreen(MenuItem& detail, TFT_eSPI& display)
     : currentDetail(detail), tft(display) {}
@@ -36,7 +36,7 @@ ScreenAction DetailScreen::handleDotLongPress() {
 }
 
 void DetailScreen::drawCall() {
-    const ApiService::PlayerState* pst = PlayerService::getCachedStatePtr();
+    const PlayerState* pst = PlayerService::getCachedStatePtr();
 
     String title = pst ? pst->title : String("None");
     String artist = pst ? pst->artist : String("");
@@ -96,7 +96,7 @@ void DetailScreen::forceRedraw() {
 
 ScreenAction DetailScreen::poll() {
     const int thresholdMs = 300000;
-    const ApiService::PlayerState* pst = PlayerService::getCachedStatePtr();
+    const PlayerState* pst = PlayerService::getCachedStatePtr();
     unsigned long idleAt = PlayerService::lastIdleOrOffMillis();
     if (pst && pst->isIdleOrOff() && idleAt != 0 && (millis() - idleAt) >= thresholdMs) {
         return ScreenAction::SwitchToMenu;

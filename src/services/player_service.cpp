@@ -1,19 +1,16 @@
 #include "player_service.h"
 #include <Arduino.h>
+#include "api_service.h"
 
-ApiService::PlayerState PlayerService::cachedState;
+PlayerState PlayerService::cachedState;
 unsigned long PlayerService::lastUpdate = 0;
 unsigned long PlayerService::lastPoll = 0;
-unsigned long PlayerService::pollIntervalMs = 5000; // 2s default
+unsigned long PlayerService::pollIntervalMs = 5000;
 bool PlayerService::hasState = false;
 unsigned long PlayerService::lastIdleOrOff = 0;
 
-const ApiService::PlayerState* PlayerService::getCachedStatePtr() {
-    if (!hasState) return nullptr;
-    return &cachedState;
-}
-
 void PlayerService::begin() {
+    // nothing to init for now
 }
 
 bool PlayerService::StopPlayback() {
@@ -24,7 +21,7 @@ bool PlayerService::StopPlayback() {
 bool PlayerService::playMedia(const String& link) {
     bool ok = ApiService::postPlayMedia(link);
     if (ok) {
-        lastIdleOrOff = millis();
+        lastIdleOrOff = 0;
     }
     return ok;
 }
@@ -33,7 +30,7 @@ void PlayerService::pollIfNeeded(unsigned long nowMillis) {
     if (nowMillis - lastPoll < pollIntervalMs) return;
     lastPoll = nowMillis;
 
-    ApiService::PlayerState st;
+    PlayerState st;
     bool ok = ApiService::getPlayerState(st);
     if (!ok) return;
 
@@ -58,7 +55,7 @@ void PlayerService::pollIfNeeded(unsigned long nowMillis) {
     hasState = true;
 }
 
-bool PlayerService::getState(ApiService::PlayerState& out) {
+bool PlayerService::getState(PlayerState& out) {
     if (!hasState) return false;
     out = cachedState;
     return true;
@@ -70,4 +67,9 @@ unsigned long PlayerService::lastUpdatedMillis() {
 
 unsigned long PlayerService::lastIdleOrOffMillis() {
     return lastIdleOrOff;
+}
+
+const PlayerState* PlayerService::getCachedStatePtr() {
+    if (!hasState) return nullptr;
+    return &cachedState;
 }

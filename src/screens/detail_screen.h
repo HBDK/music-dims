@@ -1,8 +1,8 @@
 #pragma once
 #include "screen_interface.h"
 #include "screen_action.h"
-#include "menu_item.h"
-#include "api_service.h"
+#include "models/menu_item.h"
+#include "services/api_service.h"
 #include <TFT_eSPI.h>
 
 class DetailScreen : public IScreen {

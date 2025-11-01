@@ -1,16 +1,13 @@
-#include "screen_interface.h"
-#include "menu_screen.h"
-#include "detail_screen.h"
-#include "screen_action.h"
+#include "screens/screen_interface.h"
+#include "screens/menu_screen.h"
+#include "screens/detail_screen.h"
+#include "screens/screen_action.h"
 #include <Arduino.h>
 #include <TFT_eSPI.h>
-#include "input_service.h"
-
-// -------------------- WiFi & API Integration --------------------
-// API service and MenuItem struct
-#include "menu_item.h"
-#include "api_service.h"
-#include "player_service.h"
+#include "services/input_service.h"
+#include "models/menu_item.h"
+#include "services/api_service.h"
+#include "services/player_service.h"
 
 // Secrets config
 #include "secrets.h"

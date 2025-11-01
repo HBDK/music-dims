@@ -1,8 +1,8 @@
 #include "menu_screen.h"
 #include "screen_action.h"
-#include "api_service.h"
+#include "services/api_service.h"
 #include <Arduino.h>
-#include "player_service.h"
+#include "services/player_service.h"
 #include "User_Setup.h"
 
 MenuScreen::MenuScreen(MenuItem* items, int& count, int& index, TFT_eSPI& display)

@@ -1,7 +1,7 @@
 #pragma once
 #include "screen_interface.h"
 #include "screen_action.h"
-#include "menu_item.h"
+#include "models/menu_item.h"
 #include <TFT_eSPI.h>
 
 class MenuScreen : public IScreen {
