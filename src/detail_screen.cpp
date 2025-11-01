@@ -55,24 +55,27 @@ void DetailScreen::drawCall() {
         tft.drawCentreString(artist.c_str(), cx, y + 22, subFont);
         tft.drawCentreString(album.c_str(), cx, y + 44, subFont);
 
-        String volStr = ok && st.muted ? String("MUTE") : (ok ? String("Vol:") + String(st.volume) : String("Vol:?"));
+
+
+        lastTitle = title;
+    }
+
+    String volStr = ok && st.muted ? String("MUTE") : (ok ? String("Vol:") + String(st.volume) : String("Vol:?"));
+
+    if (volStr != lastVolStr) {
+
         int volFont = 1;
         int volW = tft.textWidth(volStr);
         int volX = tft.width() - 10 - volW;
         tft.setTextColor(TFT_CYAN, TFT_BLACK);
         tft.drawString(volStr.c_str(), volX, 8, volFont);
 
-        lastTitle = title;
+        lastVolStr = volStr;
     }
 }
 
 void DetailScreen::forceRedraw() {
     lastTitle = "None";
+    lastVolStr = "None";
     drawCall();
 }
-
-void DetailScreen::pollIfNeeded(unsigned long nowMillis) {
-    (void)nowMillis;
-    drawCall();
-}
-

@@ -80,12 +80,8 @@ void loop()
   }
 
   unsigned long now = millis();
-  // Poll global PlayerService (will update cached player state)
+
   PlayerService::pollIfNeeded(now);
-  // Let the detail screen react to the cached state when active
-  if (currentScreen == detailScreen && detailScreen != nullptr) {
-    detailScreen->pollIfNeeded(now);
-  }
 
   currentScreen->drawCall();
   delay(10);
