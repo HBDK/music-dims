@@ -9,12 +9,12 @@ DetailScreen::DetailScreen(MenuItem& detail, TFT_eSPI& display)
 
 void DetailScreen::handleEncoderInc() {
     bool ok = ApiService::postVolumeUp();
-    lastPoll = 4000;
+    PlayerService::forceStateRefresh();
 }
 
 void DetailScreen::handleEncoderDec() {
     bool ok = ApiService::postVolumeDown();
-    lastPoll = 4000;
+    PlayerService::forceStateRefresh();
 }
 
 ScreenAction DetailScreen::handleBackShortPress() {

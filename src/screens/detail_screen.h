@@ -28,6 +28,4 @@ private:
     TFT_eSPI& tft;
     String lastTitle = "None";
     String lastVolStr = "None";
-    unsigned long lastPoll = 5000;
-    unsigned long pollIntervalMs = 5000; // default 5s
 };

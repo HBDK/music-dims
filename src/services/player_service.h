@@ -11,6 +11,7 @@ public:
     static unsigned long lastIdleOrOffMillis();
     static bool playMedia(const String& link);
     static const PlayerState* getCachedStatePtr();
+    static void forceStateRefresh();
 
 private:
     static PlayerState cachedState;

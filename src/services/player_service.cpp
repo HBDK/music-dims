@@ -13,6 +13,10 @@ void PlayerService::begin() {
     // nothing to init for now
 }
 
+void PlayerService::forceStateRefresh() {
+    PlayerService::lastPoll = 0;
+}
+
 bool PlayerService::StopPlayback() {
     bool stopOk = ApiService::postPlayerStop();
     return stopOk;
